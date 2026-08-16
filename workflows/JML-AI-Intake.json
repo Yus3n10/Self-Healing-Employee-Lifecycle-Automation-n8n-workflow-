@@ -150,8 +150,8 @@
     },
     {
       "parameters": {
-        "fromEmail": "pgeagoni@gmail.com",
-        "toEmail": "pgeagoni@gmail.com",
+        "fromEmail": "ops@example.com",
+        "toEmail": "ops@example.com",
         "subject": "={{ 'Review draft request: ' + $json.extracted.full_name + ' (' + $json.extracted.role_code + ')' }}",
         "html": "=<div style=\"font-family:system-ui,-apple-system,Segoe UI,sans-serif;max-width:640px\">\n  <h2 style=\"margin:0 0 4px\">Draft request, not yet submitted</h2>\n  <p style=\"color:#555;margin:0 0 16px\">\n    Parsed by {{ $json.model }}. Confidence {{ $json.confidence }}.\n    Nothing has been provisioned. Check every field, then submit.\n  </p>\n  <table cellpadding=\"6\" style=\"border-collapse:collapse;font-size:14px\">\n    <tr><td><b>Type</b></td><td>{{ $json.extracted.request_type }}</td></tr>\n    <tr><td><b>Name</b></td><td>{{ $json.extracted.full_name }}</td></tr>\n    <tr><td><b>Ref</b></td><td>{{ $json.extracted.employee_ref || '(not stated)' }}</td></tr>\n    <tr><td><b>Role</b></td><td>{{ $json.extracted.role_code }}</td></tr>\n    <tr><td><b>Department</b></td><td>{{ $json.extracted.department }}</td></tr>\n    <tr><td><b>Manager</b></td><td>{{ $json.extracted.manager_email }}</td></tr>\n    <tr><td><b>Effective</b></td><td>{{ $json.extracted.effective_date }}</td></tr>\n  </table>\n  <h3 style=\"margin:20px 0 6px;font-size:14px\">Where each value came from</h3>\n  <pre style=\"background:#f4f4f5;padding:12px;border-radius:6px;font-size:12px;white-space:pre-wrap\">{{ Object.entries($json.evidence).map(e => e[0] + ': \"' + e[1] + '\"').join('\\n') }}</pre>\n  <p style=\"color:#92400e;background:#fef3c7;padding:10px;border-radius:6px;font-size:13px\">\n    {{ $json.warnings.length ? $json.warnings.join(' · ') : 'No warnings.' }}\n  </p>\n  <p style=\"margin:24px 0\">\n    <a href=\"{{ $json.review_url }}\" style=\"background:#1e3a8a;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none\">Review and submit</a>\n  </p>\n  <p style=\"color:#777;font-size:12px\">Demo system, synthetic data.</p>\n</div>",
         "options": {}
@@ -286,8 +286,8 @@
     },
     {
       "parameters": {
-        "fromEmail": "pgeagoni@gmail.com",
-        "toEmail": "pgeagoni@gmail.com",
+        "fromEmail": "ops@example.com",
+        "toEmail": "ops@example.com",
         "subject": "Could not parse that request, please fill the form manually",
         "html": "=<div style=\"font-family:system-ui,sans-serif;max-width:640px\">\n  <h2>Automatic parsing did not produce a usable draft</h2>\n  <p>Nothing was created. Fill the request in yourself:</p>\n  <p><a href=\"http://localhost:5678/form/jml-request\">Open the request form</a></p>\n  <h3 style=\"font-size:14px\">Why it was rejected</h3>\n  <ul>{{ $json.problems.map(p => '<li>' + p + '</li>').join('') }}</ul>\n</div>",
         "options": {}
@@ -551,7 +551,7 @@
         "updatedAt": "2026-08-14T09:51:41.743Z",
         "createdAt": "2026-08-12T23:54:23.095Z",
         "id": "RRFbGOMvobFlEqLc",
-        "name": "Ptheusen Geagoni <pgeagoni@gmail.com>",
+        "name": "Ptheusen Geagoni <ops@example.com>",
         "type": "personal",
         "icon": null,
         "description": null,

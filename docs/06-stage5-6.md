@@ -420,7 +420,7 @@ a demo or as something someone thought about running.
 Before you push, prove it:
 
 ```bash
-cd "D:\Claude Local\jml-orchestrator"; git init; git add -A; git grep -nE "(npg_|AIza|AQ\.|sk-|password\s*=\s*[\"'][^\"']+)" -- . ':!*.example'
+cd "C:\path\to\jml-orchestrator"; git init; git add -A; git grep -nE "(npg_|AIza|AQ\.|sk-|password\s*=\s*[\"'][^\"']+)" -- . ':!*.example'
 ```
 
 That must return nothing.
@@ -449,7 +449,7 @@ here. If you want to demonstrate that you know the difference, add this to the
 top of `Build Request` as a comment rather than building it:
 
 ```
-// ponytail: fixed 2s backoff, 3 tries. A real IdP with a burst quota wants
+// Known limitation: fixed 2s backoff, 3 tries. A real IdP with a burst quota wants
 // exponential backoff with jitter plus a token bucket in front of the loop.
 // Add when a provider actually rate-limits us, not before.
 ```
@@ -459,7 +459,7 @@ top of `Build Request` as a comment rather than building it:
 Workflows that live only in n8n's SQLite are not a portfolio piece. Export them.
 
 ```bash
-cd "D:\Claude Local\jml-orchestrator"; n8n export:workflow --all --separate --output=workflows/
+cd "C:\path\to\jml-orchestrator"; n8n export:workflow --all --separate --output=workflows/
 ```
 
 Run that after any change. It writes one JSON file per workflow. Credentials

@@ -146,8 +146,8 @@
     },
     {
       "parameters": {
-        "fromEmail": "pgeagoni@gmail.com",
-        "toEmail": "pgeagoni@gmail.com",
+        "fromEmail": "ops@example.com",
+        "toEmail": "ops@example.com",
         "subject": "={{ '[JML failure] ' + $('Shape Error').first().json.workflow_name + ' at ' + $('Shape Error').first().json.last_node }}",
         "html": "=<div style=\"font-family:system-ui,sans-serif;max-width:680px\">\n  <h2 style=\"color:#991b1b;margin:0 0 8px\">Workflow failed</h2>\n  <table cellpadding=\"6\" style=\"border-collapse:collapse;font-size:14px\">\n    <tr><td><b>Workflow</b></td><td>{{ $('Shape Error').first().json.workflow_name }}</td></tr>\n    <tr><td><b>Failed at</b></td><td><code>{{ $('Shape Error').first().json.last_node }}</code></td></tr>\n    <tr><td><b>Execution</b></td><td><a href=\"{{ $('Shape Error').first().json.execution_url }}\">{{ $('Shape Error').first().json.execution_id }}</a></td></tr>\n    <tr><td><b>When</b></td><td>{{ $('Shape Error').first().json.at }}</td></tr>\n  </table>\n  <pre style=\"background:#f4f4f5;padding:12px;border-radius:6px;font-size:12px;white-space:pre-wrap\">{{ $('Shape Error').first().json.message }}</pre>\n</div>",
         "options": {}
@@ -243,7 +243,7 @@
         "updatedAt": "2026-08-14T09:51:41.743Z",
         "createdAt": "2026-08-12T23:54:23.095Z",
         "id": "RRFbGOMvobFlEqLc",
-        "name": "Ptheusen Geagoni <pgeagoni@gmail.com>",
+        "name": "Ptheusen Geagoni <ops@example.com>",
         "type": "personal",
         "icon": null,
         "description": null,

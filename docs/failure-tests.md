@@ -34,7 +34,7 @@ described as intentional.
 Load the helpers once per PowerShell session:
 
 ```bash
-cd "D:\Claude Local\jml-orchestrator"; . .\scripts\idp.ps1
+cd "C:\path\to\jml-orchestrator"; . .\scripts\idp.ps1
 ```
 
 Reset both stores between scenarios:

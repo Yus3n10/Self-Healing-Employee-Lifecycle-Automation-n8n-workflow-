@@ -89,7 +89,7 @@ nodes and they fail, that is the cause, and the fix is
 From the project folder:
 
 ```bash
-cd "D:\Claude Local\jml-orchestrator"
+cd "C:\path\to\jml-orchestrator"
 ```
 
 ```bash
@@ -144,7 +144,7 @@ for this project. Postgres is for *your* application data, not n8n's internals.
 ### Load the schema
 
 1. In the Neon console left sidebar, click **SQL Editor**.
-2. Open `D:\Claude Local\jml-orchestrator\db\schema.sql`, copy the whole file,
+2. Open `C:\path\to\jml-orchestrator\db\schema.sql`, copy the whole file,
    paste it into the editor, click **Run**.
 3. Clear the editor. Open `db\seed_entitlements.sql`, copy, paste, **Run**.
 4. Verify. Paste this and Run:
@@ -168,7 +168,7 @@ built in.
 Second PowerShell window:
 
 ```bash
-cd "D:\Claude Local\jml-orchestrator\mock-idp"
+cd "C:\path\to\jml-orchestrator\mock-idp"
 ```
 
 The virtual environment already exists if you ran the self-check. If not:
@@ -209,7 +209,7 @@ next command into the same one. From the second session onward, skip the manual
 window juggling:
 
 ```bash
-cd "D:\Claude Local\jml-orchestrator"; powershell -ExecutionPolicy Bypass -File .\scripts\start-all.ps1
+cd "C:\path\to\jml-orchestrator"; powershell -ExecutionPolicy Bypass -File .\scripts\start-all.ps1
 ```
 
 That opens both servers in their own titled windows and leaves the window you
@@ -281,7 +281,7 @@ Rename the credential to **`Mock IdP Key`**. Save.
 
 | Field | Value |
 |---|---|
-| User | your full Gmail address, e.g. `pgeagoni@gmail.com` |
+| User | your full Gmail address, e.g. `ops@example.com` |
 | Password | the 16-character app password, no spaces |
 | Host | `smtp.gmail.com` |
 | Port | `465` |

@@ -293,7 +293,7 @@ npm install -g n8n
 ```
 
 ```bash
-cd "D:\Claude Local\jml-orchestrator"; powershell -ExecutionPolicy Bypass -File .\scripts\start-all.ps1
+cd "C:\path\to\jml-orchestrator"; powershell -ExecutionPolicy Bypass -File .\scripts\start-all.ps1
 ```
 
 n8n comes up at `http://localhost:5678`, the IdP at `http://127.0.0.1:8100/docs`.
@@ -317,7 +317,7 @@ PowerShell 5.1, which mangles the escaped quotes and hands curl the JSON as a
 second URL. Load the wrappers once per session:
 
 ```bash
-cd "D:\Claude Local\jml-orchestrator"; . .\scripts\idp.ps1
+cd "C:\path\to\jml-orchestrator"; . .\scripts\idp.ps1
 ```
 
 | Instead of | Use |

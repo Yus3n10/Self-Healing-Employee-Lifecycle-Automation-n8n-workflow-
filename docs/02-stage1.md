@@ -137,7 +137,7 @@ const parts = req.full_name
 const local = parts.length >= 2 ? `${parts[0]}.${parts[parts.length - 1]}`
                                 : (parts[0] || 'unknown');
 req.work_email = `${local}@${WORK_EMAIL_DOMAIN}`;
-// ponytail: no collision suffix. Two "Ada Lovelace"s would clash. Add a counter
+// Known limitation: no collision suffix. Two "Ada Lovelace"s would clash. Add a counter
 // checked against the employees table if this ever meets real data.
 
 const errors = [];

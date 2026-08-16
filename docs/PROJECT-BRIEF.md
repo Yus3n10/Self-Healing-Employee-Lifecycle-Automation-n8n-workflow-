@@ -1,16 +1,11 @@
 # Project brief: JML Orchestrator
 
-**Purpose of this file.** A self-contained, accurate source for updating
-Ptheusen's personal-brand assets: the portfolio site, the GitHub profile README,
-the about-me corpus, and his CV. Written 2026-08-16, immediately after the
-project was finished and pushed.
+**Purpose of this file.** A single accurate source of facts about this project,
+for anyone writing about it: a portfolio entry, a CV bullet, a summary, or an
+interview answer. Written 2026-08-16, immediately after the project was finished.
 
-**Read this before writing any copy about the project.** It exists so a future
-session does not have to re-derive the facts from the repo, and so nobody
-accidentally overclaims. The "Claim boundaries" section is the important one.
-
-Deliberately kept **outside** the public repo, because it references local paths
-and personal-brand strategy.
+The **Claim boundaries** section is the important one. It lists the specific
+sentences that would be false, so nobody has to guess where the line is.
 
 ---
 
@@ -21,7 +16,6 @@ and personal-brand strategy.
 | Project name | **JML Orchestrator** (JML = Joiner, Mover, Leaver, the standard IT identity-lifecycle term) |
 | Repo name | `Self-Healing-Employee-Lifecycle-Automation-n8n-workflow-` |
 | URL | https://github.com/Yus3n10/Self-Healing-Employee-Lifecycle-Automation-n8n-workflow- |
-| Local path | `D:\Claude Local\jml-orchestrator` |
 | Visibility | Public |
 | Built | 2026-08-14 to 2026-08-16 (three days) |
 | Status | Complete and pushed. Not deployed anywhere; runs locally. |
@@ -122,7 +116,7 @@ question.
 
 | Do not write | Why |
 |---|---|
-| "Integrated with Okta / Google Workspace / Azure AD" | The identity provider is a **simulator he wrote**. Say "a simulated identity provider" or "an identity API". |
+| "Integrated with Okta / Google Workspace / Azure AD" | The identity provider is a **simulator written for this project**. Say "a simulated identity provider" or "an identity API". |
 | "Reduced onboarding time by X%" | Never ran in a company. There is no baseline. No metric exists. |
 | "Production-grade" / "production-ready" / "deployed" | Runs single-process on localhost against a simulator. |
 | "AI-powered provisioning" | The LLM drafts a request. It provisions nothing. |
@@ -231,14 +225,6 @@ would finish it.
 
 ---
 
-## Where to apply this
-
-| Asset | Location | Note |
-|---|---|---|
-| Portfolio site | `D:\Claude Local\portfolio`, data in `src/data/*.ts` | **Read the data files first**; they are the canonical live source for projects, skills, certs. Add JML Orchestrator as a project entry. |
-| GitHub profile README | `D:\Claude Local\github-profile\README.md` | Drafted but reportedly not yet pushed as the `Yus3n10/Yus3n10` repo. Verify before editing. |
-| About-me corpus | `portfolio/About-Yusen.txt` | Feeds the Pace AI chatbot. Add a short paragraph so the bot can answer questions about this project. |
-| CV | wherever the current version lives | Two or three bullets from above |
 
 ## In-repo docs worth reading if more detail is needed
 
@@ -270,16 +256,3 @@ Full versions in `docs/portfolio.md`. Summaries:
 - **How do you test an LLM guard?** Fault injection, the same way you test a
   rollback.
 
----
-
-## Positioning advice
-
-This is a **reliability engineering** project that happens to contain AI, not an
-AI project. Lead with the saga, the idempotency, and the verification. The LLM is
-the fourth thing you mention, and its selling point is how tightly it is fenced.
-
-Against the rest of his portfolio (see `[[about-me]]` and the other project
-memories), this is the piece that fills gaps nothing else covers: multi-system
-integration, at-least-once delivery semantics, human approval workflows, and
-compensating rollback. Everything else he has built is a single service he owns
-end to end.

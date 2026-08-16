@@ -425,7 +425,7 @@ Add a **Send Email** node (search `Send Email`, the SMTP one, not Gmail).
 | Parameter | Value |
 |---|---|
 | Credential | `JML SMTP` |
-| From Email | your Gmail address, e.g. `pgeagoni@gmail.com` |
+| From Email | your Gmail address, e.g. `ops@example.com` |
 | To Email | your Gmail address (see note) |
 | Subject | `{{ '[Approval needed] ' + $('Build Plan').first().json.run_type + ' — ' + $('Normalize Request').first().json.full_name + ' (' + $('Normalize Request').first().json.role_code + ')' }}` |
 | Email Format | `HTML` |

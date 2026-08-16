@@ -1483,8 +1483,8 @@
     },
     {
       "parameters": {
-        "fromEmail": "pgeagoni@gmail.com",
-        "toEmail": "pgeagoni@gmail.com",
+        "fromEmail": "ops@example.com",
+        "toEmail": "ops@example.com",
         "subject": "={{ '[Approval needed] ' + $('Build Plan').first().json.run_type + ' — ' + $('Normalize Request').first().json.full_name + ' (' + $('Normalize Request').first().json.role_code + ')' }}",
         "html": "=<div style=\"font-family:system-ui,-apple-system,Segoe UI,sans-serif;max-width:640px\">\n  <h2 style=\"margin:0 0 4px\">Approval required</h2>\n  <p style=\"color:#555;margin:0 0 16px\">\n    Intended approver: <b>{{ $('Normalize Request').first().json.manager_email }}</b><br>\n    Requested by: {{ $('Normalize Request').first().json.requested_by }}\n  </p>\n  <table cellpadding=\"6\" style=\"border-collapse:collapse;font-size:14px\">\n    <tr><td><b>Request</b></td><td>{{ $('Build Plan').first().json.run_type }}</td></tr>\n    <tr><td><b>Person</b></td><td>{{ $('Normalize Request').first().json.full_name }} ({{ $('Normalize Request').first().json.employee_ref }})</td></tr>\n    <tr><td><b>Role</b></td><td>{{ $('Normalize Request').first().json.role_code }} / {{ $('Normalize Request').first().json.department }}</td></tr>\n    <tr><td><b>Work email</b></td><td>{{ $('Build Plan').first().json.work_email }}</td></tr>\n    <tr><td><b>Effective</b></td><td>{{ $('Normalize Request').first().json.effective_date }}</td></tr>\n    <tr><td><b>Why approval</b></td><td style=\"color:#b00\">{{ $('Build Plan').first().json.approval_reason }}</td></tr>\n    <tr><td><b>Run ID</b></td><td><code>{{ $('Create Run').first().json.id }}</code></td></tr>\n  </table>\n  <h3 style=\"margin:20px 0 6px\">Plan ({{ $('Build Plan').first().json.step_count }} steps)</h3>\n  <pre style=\"background:#f4f4f5;padding:12px;border-radius:6px;font-size:13px\">{{ $('Build Plan').first().json.steps.map(s => (s.is_privileged ? '[PRIVILEGED] ' : '&nbsp;&nbsp;&nbsp;&nbsp;') + s.step_order + '  ' + s.action_type + '  ' + s.resource).join('<br>') }}</pre>\n  <p style=\"margin:24px 0\">\n    <a href=\"http://localhost:5678/webhook/jml-approval?token={{ $('Build Plan').first().json.approval_token }}&amp;decision=approve\"\n       style=\"background:#166534;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;margin-right:8px\">Approve</a>\n    <a href=\"http://localhost:5678/webhook/jml-approval?token={{ $('Build Plan').first().json.approval_token }}&amp;decision=reject\"\n       style=\"background:#991b1b;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none\">Reject</a>\n  </p>\n  <p style=\"color:#777;font-size:12px\">\n    Expires {{ $('Build Plan').first().json.approval_expires_at }}.\n    If nobody acts before then the run is marked expired and nothing is provisioned.\n    Demo system, synthetic data.\n  </p>\n</div>",
         "options": {}
@@ -2828,7 +2828,7 @@
         "updatedAt": "2026-08-14T09:51:41.743Z",
         "createdAt": "2026-08-12T23:54:23.095Z",
         "id": "RRFbGOMvobFlEqLc",
-        "name": "Ptheusen Geagoni <pgeagoni@gmail.com>",
+        "name": "Ptheusen Geagoni <ops@example.com>",
         "type": "personal",
         "icon": null,
         "description": null,

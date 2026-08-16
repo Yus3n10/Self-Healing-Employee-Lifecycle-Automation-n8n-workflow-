@@ -675,8 +675,8 @@
     },
     {
       "parameters": {
-        "fromEmail": "pgeagoni@gmail.com",
-        "toEmail": "pgeagoni@gmail.com",
+        "fromEmail": "ops@example.com",
+        "toEmail": "ops@example.com",
         "subject": "={{ '[Reminder] approval pending for ' + $json.full_name + ' (' + $json.role_code + ')' }}",
         "html": "=<p>Run <code>{{ $json.run_id }}</code> for {{ $json.full_name }} has been waiting since {{ $json.approval_sent_at }}.</p>\n<p>It expires <b>{{ $json.approval_expires_at }}</b>. If it lapses, nothing is provisioned.</p>\n<p>Intended approver: {{ $json.manager_email }}</p>",
         "options": {}
@@ -867,8 +867,8 @@
     },
     {
       "parameters": {
-        "fromEmail": "pgeagoni@gmail.com",
-        "toEmail": "pgeagoni@gmail.com",
+        "fromEmail": "ops@example.com",
+        "toEmail": "ops@example.com",
         "subject": "={{ '[SLA BREACH] ' + $json.run_type + ' for ' + $json.full_name + ' is ' + $json.hours_late + 'h late' }}",
         "html": "=<p><b>{{ $json.run_type }}</b> for {{ $json.full_name }} ({{ $json.role_code }})\n   was due {{ $json.due_at }} and is <b>{{ $json.hours_late }} hours late</b>.</p>\n<p>Current status: <code>{{ $json.status }}</code> · Run <code>{{ $json.run_id }}</code></p>\n<p>An offboarding past its due date is a security finding, not a chore.\n   Access that should have been revoked is still live.</p>",
         "options": {}
@@ -1396,7 +1396,7 @@
         "updatedAt": "2026-08-14T09:51:41.743Z",
         "createdAt": "2026-08-12T23:54:23.095Z",
         "id": "RRFbGOMvobFlEqLc",
-        "name": "Ptheusen Geagoni <pgeagoni@gmail.com>",
+        "name": "Ptheusen Geagoni <ops@example.com>",
         "type": "personal",
         "icon": null,
         "description": null,
