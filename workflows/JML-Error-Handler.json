@@ -1,0 +1,258 @@
+{
+  "updatedAt": "2026-08-14T16:18:47.991Z",
+  "createdAt": "2026-08-14T16:16:17.677Z",
+  "id": "hKaL0Ag7p8IX1pKS",
+  "name": "JML — Error Handler",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        96,
+        0
+      ],
+      "id": "b1cf7cf4-846c-41ea-bfba-fee147bf9622",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "const e = $input.first().json;\nconst ex = e.execution || {};\nconst wf = e.workflow || {};\nreturn [{\n  json: {\n    workflow_name: wf.name || 'unknown',\n    workflow_id: wf.id || null,\n    execution_id: ex.id || null,\n    execution_url: ex.url || null,\n    last_node: ex.lastNodeExecuted || null,\n    message: String((ex.error && ex.error.message) || 'unknown error').slice(0, 900),\n    at: new Date().toISOString(),\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "3ffa729b-79fe-47c4-b7f5-c745e2acc786",
+      "name": "Shape Error"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "audit_events",
+          "mode": "list",
+          "cachedResultName": "audit_events"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "actor": "system",
+            "event_type": "workflow_error",
+            "detail": "={{ JSON.stringify($json) }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "run_id",
+              "displayName": "run_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "step_id",
+              "displayName": "step_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "actor",
+              "displayName": "actor",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "event_type",
+              "displayName": "event_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "detail",
+              "displayName": "detail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        352,
+        0
+      ],
+      "id": "1980ffb8-6618-4557-8071-abb147a6436f",
+      "name": "Audit: workflow_error",
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "fromEmail": "pgeagoni@gmail.com",
+        "toEmail": "pgeagoni@gmail.com",
+        "subject": "={{ '[JML failure] ' + $('Shape Error').first().json.workflow_name + ' at ' + $('Shape Error').first().json.last_node }}",
+        "html": "=<div style=\"font-family:system-ui,sans-serif;max-width:680px\">\n  <h2 style=\"color:#991b1b;margin:0 0 8px\">Workflow failed</h2>\n  <table cellpadding=\"6\" style=\"border-collapse:collapse;font-size:14px\">\n    <tr><td><b>Workflow</b></td><td>{{ $('Shape Error').first().json.workflow_name }}</td></tr>\n    <tr><td><b>Failed at</b></td><td><code>{{ $('Shape Error').first().json.last_node }}</code></td></tr>\n    <tr><td><b>Execution</b></td><td><a href=\"{{ $('Shape Error').first().json.execution_url }}\">{{ $('Shape Error').first().json.execution_id }}</a></td></tr>\n    <tr><td><b>When</b></td><td>{{ $('Shape Error').first().json.at }}</td></tr>\n  </table>\n  <pre style=\"background:#f4f4f5;padding:12px;border-radius:6px;font-size:12px;white-space:pre-wrap\">{{ $('Shape Error').first().json.message }}</pre>\n</div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        512,
+        0
+      ],
+      "id": "3659a881-f5de-4d37-8005-35fbb7de06e6",
+      "name": "Send an Email",
+      "webhookId": "20188f1c-22ed-4e24-acd3-1bd61fb30ef5",
+      "credentials": {
+        "smtp": {
+          "id": "IJIR7DbTf1qIHJdY",
+          "name": "JML SMTP"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Shape Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shape Error": {
+      "main": [
+        [
+          {
+            "node": "Audit: workflow_error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Audit: workflow_error": {
+      "main": [
+        [
+          {
+            "node": "Send an Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send an Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "c09ca59e-9318-422b-b61b-89173cdeb423",
+  "activeVersionId": "c09ca59e-9318-422b-b61b-89173cdeb423",
+  "versionCounter": 23,
+  "triggerCount": 0,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-08-14T16:16:17.679Z",
+      "createdAt": "2026-08-14T16:16:17.679Z",
+      "role": "workflow:owner",
+      "workflowId": "hKaL0Ag7p8IX1pKS",
+      "projectId": "RRFbGOMvobFlEqLc",
+      "project": {
+        "updatedAt": "2026-08-14T09:51:41.743Z",
+        "createdAt": "2026-08-12T23:54:23.095Z",
+        "id": "RRFbGOMvobFlEqLc",
+        "name": "Ptheusen Geagoni <pgeagoni@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "302c0129-0bc4-4557-8467-e4e8e9932732"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": "Version c09ca59e",
+    "description": ""
+  }
+}

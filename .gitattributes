@@ -1,0 +1,14 @@
+# Normalise line endings so diffs stay clean across machines and on GitHub.
+* text=auto eol=lf
+
+# PowerShell is happiest with CRLF on disk.
+*.ps1 text eol=crlf
+
+# Exported n8n workflows are generated. Collapse them in PR diffs and keep them
+# out of language statistics; they are data, not hand-written source.
+workflows/*.json linguist-generated=true
+
+*.png binary
+*.jpg binary
+*.gif binary
+*.mp4 binary

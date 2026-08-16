@@ -1,0 +1,1411 @@
+{
+  "updatedAt": "2026-08-15T23:41:31.997Z",
+  "createdAt": "2026-08-14T16:45:36.574Z",
+  "id": "ZEfaQf3Bas7UCktN",
+  "name": "JML — Sweeper",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "triggerAtMinute": 5
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        176,
+        0
+      ],
+      "id": "0af81c4f-3044-4a35-acbe-68b8004061aa",
+      "name": "Every Hour"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT e.id            AS employee_id,\n       e.employee_ref,\n       e.full_name,\n       e.work_email,\n       e.role_code,\n       e.department,\n       e.end_date\nFROM employees e\nWHERE e.end_date IS NOT NULL\n  AND e.end_date <= (now() AT TIME ZONE 'Asia/Manila')::date\n  AND e.status <> 'offboarded'\n  AND NOT EXISTS (\n        SELECT 1 FROM provisioning_runs r\n        WHERE r.employee_id = e.id\n          AND r.run_type = 'offboard'\n          AND r.status IN ('planned','awaiting_approval','approved','running','completed')\n      )\nORDER BY e.end_date ASC\nLIMIT 25;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        368,
+        -160
+      ],
+      "id": "ef071df8-1ff0-4c1d-bd43-fef16f24aa0c",
+      "name": "Find Due Offboardings",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "3d8ddb00-8426-4fe2-80b7-7bb1609d52d5",
+              "leftValue": "={{ $json.employee_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        528,
+        -160
+      ],
+      "id": "1a508778-47a4-4dbe-898d-83b19ad9a386",
+      "name": "Any Due?"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO provisioning_runs\n  (employee_id, run_type, status, requires_approval, requested_by,\n   idempotency_root, due_at)\nVALUES\n  ($1::uuid, 'offboard', 'planned', false, 'system:sweeper',\n   $2,\n   ((now() AT TIME ZONE 'Asia/Manila')::date + time '17:00') AT TIME ZONE 'Asia/Manila')\nON CONFLICT (idempotency_root) DO NOTHING\nRETURNING id, employee_id;",
+        "options": {
+          "queryReplacement": "={{ [ $json.employee_id, 'offboard:' + $json.employee_ref + ':' + $json.end_date ] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        672,
+        -256
+      ],
+      "id": "f5853371-52d3-43f7-8094-b5be152540f5",
+      "name": "Create Offboard Run",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c09557fb-ce37-4f3f-8219-a43b4135e244",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        816,
+        -256
+      ],
+      "id": "23f3c791-6ad8-4837-b694-a33b78e25cdd",
+      "name": "Run Created?"
+    },
+    {
+      "parameters": {
+        "url": "={{ 'http://127.0.0.1:8100/v1/users/' + encodeURIComponent($('Find Due Offboardings').first().json.work_email) }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        960,
+        -336
+      ],
+      "id": "8ad3967a-a960-4c35-a699-4dc5e8235194",
+      "name": "Read Live State",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "agBb05wkTODDn2Ls",
+          "name": "Mock IdP Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const run = $('Create Offboard Run').first().json;\nconst emp = $('Find Due Offboardings').first().json;\nconst res = $input.first().json;\n\n// A missing account is a data problem for ONE employee. It must not abort the\n// batch. Emit a zero-step plan; the run closes as completed with nothing to do.\nif (res.statusCode !== 200) {\n  return [{\n    json: {\n      _no_account: true,\n      run_id: run.id,\n      employee_ref: emp.employee_ref,\n      work_email: emp.work_email,\n      idp_status: res.statusCode,\n    },\n  }];\n}\nconst user = res.body || {};\nconst root = `offboard:${emp.employee_ref}:${emp.end_date}`;\nconst steps = [];\n\nsteps.push({ step_order: 10, action_type: 'revoke_sessions', resource: '' });\nlet o = 20;\nfor (const g of (user.groups || []))   steps.push({ step_order: o++, action_type: 'remove_group',   resource: g });\no = 50;\nfor (const s of (user.licenses || [])) steps.push({ step_order: o++, action_type: 'revoke_license', resource: s });\nsteps.push({ step_order: 90, action_type: 'suspend_account', resource: '' });\n\nreturn steps.map(s => ({\n  json: {\n    _no_account: false,\n    run_id: run.id,\n    step_order: s.step_order,\n    action_type: s.action_type,\n    target_system: 'mockidp',\n    resource: s.resource,\n    is_privileged: false,\n    idempotency_key: `${root}:${s.step_order}:${s.action_type}:${s.resource}`,\n    status: 'pending',\n  },\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1136,
+        -336
+      ],
+      "id": "9d7cf52b-c6c1-44a2-971f-31cb6e0ddb04",
+      "name": "Build Offboard Steps"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "provisioning_steps",
+          "mode": "list",
+          "cachedResultName": "provisioning_steps"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "is_privileged": "={{ $json.is_privileged }}",
+            "step_order": "={{ $json.step_order }}",
+            "run_id": "={{ $json.run_id }}",
+            "action_type": "={{ $json.action_type }}",
+            "target_system": "={{ $json.target_system }}",
+            "resource": "={{ $json.resource }}",
+            "idempotency_key": "={{ $json.idempotency_key }}",
+            "status": "={{ $json.status }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "run_id",
+              "displayName": "run_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "step_order",
+              "displayName": "step_order",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "action_type",
+              "displayName": "action_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "target_system",
+              "displayName": "target_system",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "resource",
+              "displayName": "resource",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "is_privileged",
+              "displayName": "is_privileged",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "idempotency_key",
+              "displayName": "idempotency_key",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "attempts",
+              "displayName": "attempts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "last_error",
+              "displayName": "last_error",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "request_payload",
+              "displayName": "request_payload",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "response_payload",
+              "displayName": "response_payload",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "verified",
+              "displayName": "verified",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "started_at",
+              "displayName": "started_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "finished_at",
+              "displayName": "finished_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "skipOnConflict": false
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        1472,
+        -448
+      ],
+      "id": "b2f79798-2520-4693-acd4-c665f9667ed6",
+      "name": "Insert Offboard Steps",
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "NJ7XwqO5CjklonVS",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/NJ7XwqO5CjklonVS",
+          "cachedResultName": "JML — Execute Plan"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "run_id": "={{ $('Create Offboard Run').first().json.id }}"
+          },
+          "matchingColumns": [
+            "run_id"
+          ],
+          "schema": [
+            {
+              "id": "run_id",
+              "displayName": "run_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1616,
+        -448
+      ],
+      "id": "9b4ed918-9de8-41aa-bfaa-dd971de31ed7",
+      "name": "Dispatch Offboard"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "employees",
+          "mode": "list",
+          "cachedResultName": "employees"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('Find Due Offboardings').first().json.employee_id }}",
+            "status": "offboarded",
+            "updated_at": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "employee_ref",
+              "displayName": "employee_ref",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "full_name",
+              "displayName": "full_name",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "personal_email",
+              "displayName": "personal_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "work_email",
+              "displayName": "work_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "role_code",
+              "displayName": "role_code",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "department",
+              "displayName": "department",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "manager_email",
+              "displayName": "manager_email",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "start_date",
+              "displayName": "start_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "end_date",
+              "displayName": "end_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        1776,
+        -336
+      ],
+      "id": "f3b64669-c0a3-4a0b-85c4-7bff24d94bef",
+      "name": "Mark Offboarded",
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT r.id AS run_id, r.created_at, r.approval_sent_at, r.approval_expires_at,\n       e.full_name, e.work_email, e.role_code, e.manager_email\nFROM provisioning_runs r\nJOIN employees e ON e.id = r.employee_id\nWHERE r.status = 'awaiting_approval'\n  AND r.approval_sent_at < now() - interval '4 hours'\n  AND r.approval_expires_at > now()\nORDER BY r.created_at ASC\nLIMIT 25;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        368,
+        0
+      ],
+      "id": "b9dac565-0c48-45a6-9740-92b74948dbe2",
+      "name": "Find Stale Approvals",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "24e3dc2a-36e0-4dd9-a409-7e23fce22634",
+              "leftValue": "={{ $json.run_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        528,
+        0
+      ],
+      "id": "cfbcc965-2bf0-4497-8e33-c44581615122",
+      "name": "Any Stale?"
+    },
+    {
+      "parameters": {
+        "fromEmail": "pgeagoni@gmail.com",
+        "toEmail": "pgeagoni@gmail.com",
+        "subject": "={{ '[Reminder] approval pending for ' + $json.full_name + ' (' + $json.role_code + ')' }}",
+        "html": "=<p>Run <code>{{ $json.run_id }}</code> for {{ $json.full_name }} has been waiting since {{ $json.approval_sent_at }}.</p>\n<p>It expires <b>{{ $json.approval_expires_at }}</b>. If it lapses, nothing is provisioned.</p>\n<p>Intended approver: {{ $json.manager_email }}</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        736,
+        -64
+      ],
+      "id": "f4cb7c08-7d12-456c-8280-774bc6dd0cae",
+      "name": "Email Reminder",
+      "webhookId": "54b65173-bf6d-4728-a79e-dc176918d30f",
+      "credentials": {
+        "smtp": {
+          "id": "IJIR7DbTf1qIHJdY",
+          "name": "JML SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "audit_events",
+          "mode": "list",
+          "cachedResultName": "audit_events"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "run_id": "={{ $('Find Stale Approvals').first().json.run_id }}",
+            "actor": "system:sweeper",
+            "event_type": "approval_reminder_sent",
+            "detail": "={{ JSON.stringify({ sent_at: $now.toISO() }) }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "run_id",
+              "displayName": "run_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "step_id",
+              "displayName": "step_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "actor",
+              "displayName": "actor",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "event_type",
+              "displayName": "event_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "detail",
+              "displayName": "detail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        896,
+        -64
+      ],
+      "id": "5f1b0215-1817-4fa8-9a27-2cdd809a33f1",
+      "name": "Audit: approval_reminder_sent",
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT r.id AS run_id, r.run_type, r.status, r.due_at,\n       e.full_name, e.work_email, e.role_code,\n       round(EXTRACT(EPOCH FROM (now() - r.due_at)) / 3600.0, 1) AS hours_late\nFROM provisioning_runs r\nJOIN employees e ON e.id = r.employee_id\nWHERE r.status IN ('planned','awaiting_approval','approved','running')\n  AND r.due_at < now()\nORDER BY r.due_at ASC\nLIMIT 25;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        368,
+        176
+      ],
+      "id": "2004e867-8125-45f5-a723-a7c4c84b85c4",
+      "name": "Find SLA Breaches",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "9e1a1c5f-925d-4d11-8fcb-d12275778277",
+              "leftValue": "={{ $json.run_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        592,
+        176
+      ],
+      "id": "bace8dc3-f913-4918-9802-6ae545480055",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "fromEmail": "pgeagoni@gmail.com",
+        "toEmail": "pgeagoni@gmail.com",
+        "subject": "={{ '[SLA BREACH] ' + $json.run_type + ' for ' + $json.full_name + ' is ' + $json.hours_late + 'h late' }}",
+        "html": "=<p><b>{{ $json.run_type }}</b> for {{ $json.full_name }} ({{ $json.role_code }})\n   was due {{ $json.due_at }} and is <b>{{ $json.hours_late }} hours late</b>.</p>\n<p>Current status: <code>{{ $json.status }}</code> · Run <code>{{ $json.run_id }}</code></p>\n<p>An offboarding past its due date is a security finding, not a chore.\n   Access that should have been revoked is still live.</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        800,
+        112
+      ],
+      "id": "0c637e2f-0bf6-4b3b-9678-900ca3543165",
+      "name": "Send an Email",
+      "webhookId": "a4684959-7dce-425f-9f01-2231afcf2835",
+      "credentials": {
+        "smtp": {
+          "id": "IJIR7DbTf1qIHJdY",
+          "name": "JML SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "audit_events",
+          "mode": "list",
+          "cachedResultName": "audit_events"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "event_type": "sla_breached",
+            "detail": "={{ JSON.stringify({ hours_late: $('Find SLA Breaches').first().json.hours_late, run_status: $('Find SLA Breaches').first().json.status }) }}",
+            "run_id": "={{ $('Find Stale Approvals').first().json.run_id }}",
+            "actor": "system:sweeper"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "run_id",
+              "displayName": "run_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "step_id",
+              "displayName": "step_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "actor",
+              "displayName": "actor",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "event_type",
+              "displayName": "event_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "detail",
+              "displayName": "detail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        1024,
+        112
+      ],
+      "id": "c62218bb-7e17-451c-bed8-a46760d396ae",
+      "name": "Insert rows in a table",
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "3c1cdffc-d5a7-492d-895d-64f7236e81e9",
+              "leftValue": "={{ !$json._no_account }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1328,
+        -336
+      ],
+      "id": "72f025cb-280a-484b-ac96-9a321818623a",
+      "name": "Has Steps?"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "audit_events",
+          "mode": "list",
+          "cachedResultName": "audit_events"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "run_id": "={{ $json.run_id }}",
+            "actor": "system:sweeper",
+            "event_type": "offboard_no_account",
+            "detail": "={{ JSON.stringify({ employee_ref: $json.employee_ref, work_email: $json.work_email, idp_status: $json.idp_status }) }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "run_id",
+              "displayName": "run_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "step_id",
+              "displayName": "step_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "actor",
+              "displayName": "actor",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "event_type",
+              "displayName": "event_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "detail",
+              "displayName": "detail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        1456,
+        -240
+      ],
+      "id": "794a5aa9-cff6-45e4-a311-a71fc8cdff09",
+      "name": "Audit: offboard_no_account",
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Every Hour": {
+      "main": [
+        [
+          {
+            "node": "Find Due Offboardings",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Find SLA Breaches",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Find Stale Approvals",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Due Offboardings": {
+      "main": [
+        [
+          {
+            "node": "Any Due?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any Due?": {
+      "main": [
+        [
+          {
+            "node": "Create Offboard Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Offboard Run": {
+      "main": [
+        [
+          {
+            "node": "Run Created?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Created?": {
+      "main": [
+        [
+          {
+            "node": "Read Live State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Live State": {
+      "main": [
+        [
+          {
+            "node": "Build Offboard Steps",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Offboard Steps": {
+      "main": [
+        [
+          {
+            "node": "Has Steps?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Offboard Steps": {
+      "main": [
+        [
+          {
+            "node": "Dispatch Offboard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dispatch Offboard": {
+      "main": [
+        [
+          {
+            "node": "Mark Offboarded",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Stale Approvals": {
+      "main": [
+        [
+          {
+            "node": "Any Stale?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any Stale?": {
+      "main": [
+        [
+          {
+            "node": "Email Reminder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Reminder": {
+      "main": [
+        [
+          {
+            "node": "Audit: approval_reminder_sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find SLA Breaches": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send an Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send an Email": {
+      "main": [
+        [
+          {
+            "node": "Insert rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Steps?": {
+      "main": [
+        [
+          {
+            "node": "Insert Offboard Steps",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Audit: offboard_no_account",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Audit: offboard_no_account": {
+      "main": [
+        [
+          {
+            "node": "Mark Offboarded",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "hKaL0Ag7p8IX1pKS"
+  },
+  "staticData": {
+    "node:Every Hour": {
+      "recurrenceRules": [
+        null
+      ],
+      "recurrenceRuleSignatures": [
+        null
+      ]
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "5cda0b14-d503-447f-8c83-dc23b83ccbe1",
+  "activeVersionId": "5cda0b14-d503-447f-8c83-dc23b83ccbe1",
+  "versionCounter": 155,
+  "triggerCount": 1,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-08-14T16:45:36.577Z",
+      "createdAt": "2026-08-14T16:45:36.577Z",
+      "role": "workflow:owner",
+      "workflowId": "ZEfaQf3Bas7UCktN",
+      "projectId": "RRFbGOMvobFlEqLc",
+      "project": {
+        "updatedAt": "2026-08-14T09:51:41.743Z",
+        "createdAt": "2026-08-12T23:54:23.095Z",
+        "id": "RRFbGOMvobFlEqLc",
+        "name": "Ptheusen Geagoni <pgeagoni@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "302c0129-0bc4-4557-8467-e4e8e9932732"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": "Version 5cda0b14",
+    "description": ""
+  }
+}

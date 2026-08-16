@@ -1,0 +1,666 @@
+{
+  "updatedAt": "2026-08-14T16:29:27.257Z",
+  "createdAt": "2026-08-14T13:54:11.824Z",
+  "id": "UznA4O3BAQEv9wWi",
+  "name": "JML — Approval Callback",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "jml-approval",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "4e6e85bb-55f8-4929-83be-c11ab606f0e2",
+      "name": "Approval Webhook",
+      "webhookId": "22e70800-abec-4aaf-9a93-d72be597cc05"
+    },
+    {
+      "parameters": {
+        "jsCode": "const q = ($input.first().json.query) || {};\nlet token = String(q.token || '').trim();\nlet decision = String(q.decision || '').trim().toLowerCase();\n\n// Recover from a mail client that ate the & between the two parameters.\nconst glued = token.match(/^([0-9a-f]{32})decision=(approve|reject)$/i);\nif (glued) { token = glued[1]; decision = glued[2].toLowerCase(); }\n\nconst clientIp = String(\n  ($input.first().json.headers || {})['x-forwarded-for'] || 'local'\n);\n\nreturn [{\n  json: {\n    token,\n    decision: decision === 'approve' ? 'approved'\n            : decision === 'reject'  ? 'rejected'\n            : '',\n    client_ip: clientIp,\n    input_ok: token.length === 32 && ['approve', 'reject'].includes(decision),\n    debug_raw_token_len: String(q.token || '').length,\n    debug_raw_decision: String(q.decision || ''),\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        144,
+        0
+      ],
+      "id": "84b136e4-c13e-4c47-ba33-85cbaf097c67",
+      "name": "Read Token"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "provisioning_runs",
+          "mode": "list",
+          "cachedResultName": "provisioning_runs"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "approval_token",
+              "value": "={{ $json.token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        288,
+        0
+      ],
+      "id": "6fab1df5-e0a3-4789-8f03-e42e9761abd8",
+      "name": "Find Run",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4886ffec-9371-482a-a054-f6b83be61916",
+              "leftValue": "={{ $('Read Token').first().json.input_ok }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "6184d871-f43d-444d-842d-2f8864bac93c",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "eb9c9f25-564a-4b22-b1ce-8920594c4e41",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "awaiting_approval",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "b2718c76-a5d1-4599-95b3-69631e8955bd",
+              "leftValue": "={{ $json.approval_expires_at }}",
+              "rightValue": "={{ $now.toISO() }}",
+              "operator": {
+                "type": "dateTime",
+                "operation": "after"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        432,
+        0
+      ],
+      "id": "a7652960-693e-4671-a80e-fb5dc6974ce6",
+      "name": "Is Actionable?"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "provisioning_runs",
+          "mode": "list",
+          "cachedResultName": "provisioning_runs"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.id }}",
+            "decision": "={{ $('Read Token').first().json.decision }}",
+            "status": "={{ $('Read Token').first().json.decision === 'approved' ? 'approved' : 'rejected' }}",
+            "approved_by": "={{ 'link-holder@' + $('Read Token').first().json.client_ip }}",
+            "approved_at": "={{ $now.toISO() }}",
+            "approval_token": "={{ null }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "employee_id",
+              "displayName": "employee_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "run_type",
+              "displayName": "run_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "requires_approval",
+              "displayName": "requires_approval",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "approval_token",
+              "displayName": "approval_token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "approval_sent_at",
+              "displayName": "approval_sent_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "approval_expires_at",
+              "displayName": "approval_expires_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "resume_url",
+              "displayName": "resume_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "approved_by",
+              "displayName": "approved_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "approved_at",
+              "displayName": "approved_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "decision",
+              "displayName": "decision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "requested_by",
+              "displayName": "requested_by",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "idempotency_root",
+              "displayName": "idempotency_root",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "due_at",
+              "displayName": "due_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "started_at",
+              "displayName": "started_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "finished_at",
+              "displayName": "finished_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        576,
+        -80
+      ],
+      "id": "dfa24db6-ca98-4e24-8c1e-9b33069baac0",
+      "name": "Record Decision",
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "audit_events",
+          "mode": "list",
+          "cachedResultName": "audit_events"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "run_id": "={{ $('Find Run').first().json.id }}",
+            "actor": "={{ 'link-holder@' + $('Read Token').first().json.client_ip }}",
+            "event_type": "={{ 'approval_' + $('Read Token').first().json.decision }}",
+            "detail": "={{ JSON.stringify({ decided_at: $now.toISO(), client_ip: $('Read Token').first().json.client_ip }) }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "run_id",
+              "displayName": "run_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "step_id",
+              "displayName": "step_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "actor",
+              "displayName": "actor",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "event_type",
+              "displayName": "event_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "detail",
+              "displayName": "detail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        720,
+        -80
+      ],
+      "id": "137c0c11-c7a0-4515-85a8-a79a19bec6c8",
+      "name": "Audit: decision",
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Find Run').first().json.resume_url }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        864,
+        -80
+      ],
+      "id": "ad0c6a26-6d49-463c-925d-dcc4fbce6d43",
+      "name": "Release Wait",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ 'Decision recorded: ' + $('Read Token').first().json.decision + '. You can close this tab.' }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1008,
+        -80
+      ],
+      "id": "e547c344-3e62-4e70-8a77-50c82bd9f135",
+      "name": "Respond OK"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "This approval link is invalid, already used, or expired.",
+        "options": {
+          "responseCode": 410
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        576,
+        80
+      ],
+      "id": "38717a73-2df0-4764-a6e4-de592560f34e",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "connections": {
+    "Approval Webhook": {
+      "main": [
+        [
+          {
+            "node": "Read Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Token": {
+      "main": [
+        [
+          {
+            "node": "Find Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Run": {
+      "main": [
+        [
+          {
+            "node": "Is Actionable?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Actionable?": {
+      "main": [
+        [
+          {
+            "node": "Record Decision",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record Decision": {
+      "main": [
+        [
+          {
+            "node": "Audit: decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Audit: decision": {
+      "main": [
+        [
+          {
+            "node": "Release Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Release Wait": {
+      "main": [
+        [
+          {
+            "node": "Respond OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "hKaL0Ag7p8IX1pKS"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "b00f0b64-4fa8-4698-b633-dd67566acdff",
+  "activeVersionId": "d46c68f7-36d6-4680-b26f-1f9d32c179db",
+  "versionCounter": 101,
+  "triggerCount": 1,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-08-14T13:54:11.830Z",
+      "createdAt": "2026-08-14T13:54:11.830Z",
+      "role": "workflow:owner",
+      "workflowId": "UznA4O3BAQEv9wWi",
+      "projectId": "RRFbGOMvobFlEqLc",
+      "project": {
+        "updatedAt": "2026-08-14T09:51:41.743Z",
+        "createdAt": "2026-08-12T23:54:23.095Z",
+        "id": "RRFbGOMvobFlEqLc",
+        "name": "Ptheusen Geagoni <pgeagoni@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "302c0129-0bc4-4557-8467-e4e8e9932732"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

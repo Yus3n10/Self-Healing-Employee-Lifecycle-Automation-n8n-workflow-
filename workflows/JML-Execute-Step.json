@@ -1,0 +1,1269 @@
+{
+  "updatedAt": "2026-08-14T16:33:41.222Z",
+  "createdAt": "2026-08-14T15:03:14.515Z",
+  "id": "jHGECpLGsjLBcQop",
+  "name": "JML — Execute Step",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "step_id"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "53f2f3d9-b657-4a76-b6d7-1b84b3e06633",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "provisioning_steps",
+          "mode": "list",
+          "cachedResultName": "provisioning_steps"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "attempts": "={{ $json.attempts + 1 }}",
+            "id": "={{ $json.step_id }}",
+            "status": "in_progress",
+            "started_at": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "run_id",
+              "displayName": "run_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "step_order",
+              "displayName": "step_order",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "action_type",
+              "displayName": "action_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "target_system",
+              "displayName": "target_system",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "resource",
+              "displayName": "resource",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "is_privileged",
+              "displayName": "is_privileged",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "idempotency_key",
+              "displayName": "idempotency_key",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "attempts",
+              "displayName": "attempts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_error",
+              "displayName": "last_error",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "request_payload",
+              "displayName": "request_payload",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "response_payload",
+              "displayName": "response_payload",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "verified",
+              "displayName": "verified",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "started_at",
+              "displayName": "started_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "finished_at",
+              "displayName": "finished_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        336,
+        0
+      ],
+      "id": "d13bd107-7417-49cd-8da8-60d58e09d82c",
+      "name": "Mark In Progress",
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const IDP_BASE = 'http://127.0.0.1:8100';\n\nconst s = $('Load Step Context').first().json;\nconst email = encodeURIComponent(s.work_email);\nconst res = encodeURIComponent(s.resource || '');\n\nlet method, path, body = {}, verify_kind, verify_value = s.resource || '';\n\nswitch (s.action_type) {\n  case 'create_account':\n    method = 'POST'; path = '/v1/users';\n    body = {\n      employee_ref: s.employee_ref, full_name: s.full_name,\n      work_email: s.work_email, department: s.department, role_code: s.role_code,\n    };\n    verify_kind = 'account_exists'; verify_value = '';\n    break;\n  case 'add_group':\n    method = 'POST'; path = `/v1/users/${email}/groups`;\n    body = { group: s.resource };\n    verify_kind = 'group_present';\n    break;\n  case 'assign_license':\n    method = 'POST'; path = `/v1/users/${email}/licenses`;\n    body = { sku: s.resource };\n    verify_kind = 'license_present';\n    break;\n  case 'remove_group':\n    method = 'DELETE'; path = `/v1/users/${email}/groups/${res}`;\n    verify_kind = 'group_absent';\n    break;\n  case 'revoke_license':\n    method = 'DELETE'; path = `/v1/users/${email}/licenses/${res}`;\n    verify_kind = 'license_absent';\n    break;\n  case 'revoke_sessions':\n    method = 'POST'; path = `/v1/users/${email}/sessions/revoke`;\n    verify_kind = 'sessions_revoked'; verify_value = '';\n    break;\n  case 'suspend_account':\n    method = 'POST'; path = `/v1/users/${email}/suspend`;\n    verify_kind = 'status_equals'; verify_value = 'suspended';\n    break;\n  case 'delete_account':\n    method = 'DELETE'; path = `/v1/users/${email}`;\n    verify_kind = 'status_equals'; verify_value = 'deleted';\n    break;\n  default:\n    throw new Error(`unknown action_type: ${s.action_type}`);\n}\n\nreturn [{\n  json: {\n    ...s,\n    method,\n    url: IDP_BASE + path,\n    request_body: body,\n    verify_url: `${IDP_BASE}/v1/users/${email}`,\n    verify_kind,\n    verify_value,\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        496,
+        0
+      ],
+      "id": "3af96ea2-a0a0-48d1-b837-ff675f1b5600",
+      "name": "Build Request"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT s.id            AS step_id,\n       s.run_id,\n       s.step_order,\n       s.action_type,\n       s.resource,\n       s.idempotency_key,\n       s.attempts,\n       e.work_email,\n       e.employee_ref,\n       e.full_name,\n       e.department,\n       e.role_code\nFROM provisioning_steps s\nJOIN provisioning_runs  r ON r.id = s.run_id\nJOIN employees          e ON e.id = r.employee_id\nWHERE s.id = $1::uuid;",
+        "options": {
+          "queryReplacement": "={{ $json.step_id }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        160,
+        0
+      ],
+      "id": "3c5c745c-43bf-4876-8323-310b58c9157c",
+      "name": "Load Step Context",
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "={{ $json.method }}",
+        "url": "={{ $json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Idempotency-Key",
+              "value": "={{ $json.idempotency_key }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.request_body) }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        656,
+        0
+      ],
+      "id": "9a3dc5bd-00b8-496a-a8f5-5318b28452fc",
+      "name": "Call IdP",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "agBb05wkTODDn2Ls",
+          "name": "Mock IdP Key"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Build Request').first().json.verify_url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        800,
+        -96
+      ],
+      "id": "964abac6-d8ec-4e55-a102-1565f708f6e1",
+      "name": "Verify Effect",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "agBb05wkTODDn2Ls",
+          "name": "Mock IdP Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const ctx  = $('Build Request').first().json;\nconst call = $('Call IdP').first().json;\nconst vr   = $input.first().json;\n\nconst httpOk = vr.statusCode === 200;\nconst user = vr.body || {};\n\nlet verified = false;\nlet reason = '';\n\nif (!httpOk) {\n  reason = `verification GET returned ${vr.statusCode}`;\n} else {\n  switch (ctx.verify_kind) {\n    case 'account_exists':\n      verified = Boolean(user.user_id);\n      reason = verified ? '' : 'account not present after create';\n      break;\n    case 'group_present':\n      verified = (user.groups || []).includes(ctx.verify_value);\n      reason = verified ? '' : `group ${ctx.verify_value} not in ${JSON.stringify(user.groups)}`;\n      break;\n    case 'group_absent':\n      verified = !(user.groups || []).includes(ctx.verify_value);\n      reason = verified ? '' : `group ${ctx.verify_value} still present`;\n      break;\n    case 'license_present':\n      verified = (user.licenses || []).includes(ctx.verify_value);\n      reason = verified ? '' : `license ${ctx.verify_value} not in ${JSON.stringify(user.licenses)}`;\n      break;\n    case 'license_absent':\n      verified = !(user.licenses || []).includes(ctx.verify_value);\n      reason = verified ? '' : `license ${ctx.verify_value} still present`;\n      break;\n    case 'sessions_revoked':\n      verified = Boolean(user.sessions_revoked_at);\n      reason = verified ? '' : 'sessions_revoked_at is still null';\n      break;\n    case 'status_equals':\n      verified = user.status === ctx.verify_value;\n      reason = verified ? '' : `status is ${user.status}, expected ${ctx.verify_value}`;\n      break;\n    default:\n      reason = `unknown verify_kind ${ctx.verify_kind}`;\n  }\n}\n\nreturn [{\n  json: {\n    step_id: ctx.step_id,\n    run_id: ctx.run_id,\n    action_type: ctx.action_type,\n    resource: ctx.resource,\n    verified,\n    reason,\n    idempotent_replay: (call.headers || {})['x-idempotent-replay'] === 'true',\n    idp_status_code: call.statusCode,\n    response_payload: JSON.stringify(call.body ?? {}),\n    request_payload: JSON.stringify(ctx.request_body ?? {}),\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        -96
+      ],
+      "id": "42f36bae-3159-4986-99ba-2a38607f6b30",
+      "name": "Check Verification"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "36558a4c-eddf-4220-a550-3abfe607dffc",
+              "leftValue": "={{ $json.verified }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1120,
+        -96
+      ],
+      "id": "29a6eada-07aa-48b9-9b56-0909c5c31d6a",
+      "name": "Verified?"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "provisioning_steps",
+          "mode": "list",
+          "cachedResultName": "provisioning_steps"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "verified": "={{ true }}",
+            "id": "={{ $json.step_id }}",
+            "status": "succeeded",
+            "finished_at": "={{ $now.toISO() }}",
+            "request_payload": "={{ $json.request_payload }}",
+            "response_payload": "={{ $json.response_payload }}",
+            "last_error": "={{ null }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "run_id",
+              "displayName": "run_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "step_order",
+              "displayName": "step_order",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "action_type",
+              "displayName": "action_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "target_system",
+              "displayName": "target_system",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "resource",
+              "displayName": "resource",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "is_privileged",
+              "displayName": "is_privileged",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "idempotency_key",
+              "displayName": "idempotency_key",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "attempts",
+              "displayName": "attempts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "last_error",
+              "displayName": "last_error",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "request_payload",
+              "displayName": "request_payload",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "response_payload",
+              "displayName": "response_payload",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "verified",
+              "displayName": "verified",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "started_at",
+              "displayName": "started_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "finished_at",
+              "displayName": "finished_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        1344,
+        -192
+      ],
+      "id": "c68dbe5b-34ad-44c5-bc76-4577d0845e4a",
+      "name": "Mark Succeeded",
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "audit_events",
+          "mode": "list",
+          "cachedResultName": "audit_events"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "run_id": "={{ $('Check Verification').first().json.run_id }}",
+            "step_id": "={{ $('Check Verification').first().json.step_id }}",
+            "actor": "system",
+            "event_type": "step_succeeded",
+            "detail": "={{ JSON.stringify({ action: $('Check Verification').first().json.action_type, resource: $('Check Verification').first().json.resource, idp_status_code: $('Check Verification').first().json.idp_status_code, idempotent_replay: $('Check Verification').first().json.idempotent_replay }) }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "run_id",
+              "displayName": "run_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "step_id",
+              "displayName": "step_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "actor",
+              "displayName": "actor",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "event_type",
+              "displayName": "event_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "detail",
+              "displayName": "detail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        1504,
+        -192
+      ],
+      "id": "357740c5-58d5-465f-ad1c-4b0a070a38bd",
+      "name": "Audit: step_succeeded",
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const c = $('Check Verification').first().json;\nreturn [{ json: { ok: true, step_id: c.step_id, action_type: c.action_type,\n                  resource: c.resource, error: null } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1664,
+        -192
+      ],
+      "id": "58fc4a8e-ba1a-478e-a89d-3ab1bf25537d",
+      "name": "Return OK"
+    },
+    {
+      "parameters": {
+        "jsCode": "const ctx = $('Build Request').first().json;\nconst raw = $input.first().json;\n\nconst message = raw.error\n  ? `IdP call failed: ${raw.error.message || JSON.stringify(raw.error)}`\n  : `verification failed: ${raw.reason || 'unknown'}`;\n\nreturn [{\n  json: {\n    step_id: ctx.step_id,\n    run_id: ctx.run_id,\n    action_type: ctx.action_type,\n    resource: ctx.resource,\n    error: String(message).slice(0, 900),\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        16
+      ],
+      "id": "799b1c88-2442-4b7f-8862-50bcf14ccc00",
+      "name": "Collect Failure"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "provisioning_steps",
+          "mode": "list",
+          "cachedResultName": "provisioning_steps"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "verified": "={{ false }}",
+            "id": "={{ $json.step_id }}",
+            "status": "failed",
+            "finished_at": "={{ $now.toISO() }}",
+            "last_error": "={{ $json.error }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "run_id",
+              "displayName": "run_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "step_order",
+              "displayName": "step_order",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "action_type",
+              "displayName": "action_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "target_system",
+              "displayName": "target_system",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "resource",
+              "displayName": "resource",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "is_privileged",
+              "displayName": "is_privileged",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "idempotency_key",
+              "displayName": "idempotency_key",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "attempts",
+              "displayName": "attempts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "last_error",
+              "displayName": "last_error",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "request_payload",
+              "displayName": "request_payload",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "response_payload",
+              "displayName": "response_payload",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "verified",
+              "displayName": "verified",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "started_at",
+              "displayName": "started_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "finished_at",
+              "displayName": "finished_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        1504,
+        16
+      ],
+      "id": "0b1e5d31-d77d-46ed-8347-a82d9e7b2e6f",
+      "name": "Mark Failed",
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "audit_events",
+          "mode": "list",
+          "cachedResultName": "audit_events"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "run_id": "={{ $('Collect Failure').first().json.run_id }}",
+            "step_id": "={{ $('Collect Failure').first().json.step_id }}",
+            "actor": "system",
+            "event_type": "step_failed",
+            "detail": "={{ JSON.stringify({ action: $('Collect Failure').first().json.action_type, resource: $('Collect Failure').first().json.resource, error: $('Collect Failure').first().json.error }) }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "run_id",
+              "displayName": "run_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "step_id",
+              "displayName": "step_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "actor",
+              "displayName": "actor",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "event_type",
+              "displayName": "event_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "detail",
+              "displayName": "detail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        1664,
+        16
+      ],
+      "id": "5e028d4c-aae4-4d6a-a73c-cd64190eade3",
+      "name": "Audit: step_failed",
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const c = $('Collect Failure').first().json;\nreturn [{ json: { ok: false, step_id: c.step_id, action_type: c.action_type,\n                  resource: c.resource, error: c.error } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1824,
+        16
+      ],
+      "id": "8a23d73f-9f5a-4b80-89f1-34ad7050d6e4",
+      "name": "Return Failed"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Load Step Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark In Progress": {
+      "main": [
+        [
+          {
+            "node": "Build Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Step Context": {
+      "main": [
+        [
+          {
+            "node": "Mark In Progress",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Request": {
+      "main": [
+        [
+          {
+            "node": "Call IdP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call IdP": {
+      "main": [
+        [
+          {
+            "node": "Verify Effect",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Collect Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify Effect": {
+      "main": [
+        [
+          {
+            "node": "Check Verification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Verification": {
+      "main": [
+        [
+          {
+            "node": "Verified?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verified?": {
+      "main": [
+        [
+          {
+            "node": "Mark Succeeded",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Collect Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Succeeded": {
+      "main": [
+        [
+          {
+            "node": "Audit: step_succeeded",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Audit: step_succeeded": {
+      "main": [
+        [
+          {
+            "node": "Return OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect Failure": {
+      "main": [
+        [
+          {
+            "node": "Mark Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Failed": {
+      "main": [
+        [
+          {
+            "node": "Audit: step_failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Audit: step_failed": {
+      "main": [
+        [
+          {
+            "node": "Return Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "hKaL0Ag7p8IX1pKS"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "9a3621f9-73b2-4b7d-b47e-1dcfc334c930",
+  "activeVersionId": "b6dbb948-3fc5-446b-a260-fd945cf565ab",
+  "versionCounter": 139,
+  "triggerCount": 0,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-08-14T15:03:14.519Z",
+      "createdAt": "2026-08-14T15:03:14.519Z",
+      "role": "workflow:owner",
+      "workflowId": "jHGECpLGsjLBcQop",
+      "projectId": "RRFbGOMvobFlEqLc",
+      "project": {
+        "updatedAt": "2026-08-14T09:51:41.743Z",
+        "createdAt": "2026-08-12T23:54:23.095Z",
+        "id": "RRFbGOMvobFlEqLc",
+        "name": "Ptheusen Geagoni <pgeagoni@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "302c0129-0bc4-4557-8467-e4e8e9932732"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

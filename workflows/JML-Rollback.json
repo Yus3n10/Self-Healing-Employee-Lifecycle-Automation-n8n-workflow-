@@ -1,0 +1,1257 @@
+{
+  "updatedAt": "2026-08-14T16:31:39.599Z",
+  "createdAt": "2026-08-14T15:59:26.323Z",
+  "id": "qDLvxmSWqOTJdknv",
+  "name": "JML — Rollback",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "run_id"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ff8b5e16-2c9a-462d-a1ce-58c2ef08400a",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT s.id            AS step_id,\n       s.step_order,\n       s.action_type,\n       s.resource,\n       s.idempotency_key,\n       e.work_email\nFROM provisioning_steps s\nJOIN provisioning_runs  r ON r.id = s.run_id\nJOIN employees          e ON e.id = r.employee_id\nWHERE s.run_id = $1::uuid\n  AND s.status = 'succeeded'\nORDER BY s.step_order DESC;",
+        "options": {
+          "queryReplacement": "={{ $('When Executed by Another Workflow').first().json.run_id }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        192,
+        0
+      ],
+      "id": "9cbba967-7da8-47f7-a31c-4e01d61fe363",
+      "name": "Load Succeeded Steps",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const IDP_BASE = 'http://127.0.0.1:8100';\nconst runId = $('When Executed by Another Workflow').first().json.run_id;\n\nconst INVERSE = {\n  create_account:  'delete_account',\n  add_group:       'remove_group',\n  assign_license:  'revoke_license',\n  // Offboarding actions are NOT compensated. Re-granting access that was\n  // deliberately revoked is never the safe default; a human re-runs onboarding.\n  revoke_sessions: null,\n  remove_group:    null,\n  revoke_license:  null,\n  suspend_account: null,\n  delete_account:  null,\n};\n\nconst out = [];\nfor (const item of $input.all()) {\n  const s = item.json;\n  if (!s || !s.step_id) continue;   // empty item from Always Output Data\n\n  const inverse = INVERSE[s.action_type];\n  if (!inverse) {\n    out.push({ json: { ...s, run_id: runId, compensable: false,\n                       reason: `no inverse for ${s.action_type}` } });\n    continue;\n  }\n\n  const email = encodeURIComponent(s.work_email);\n  const res = encodeURIComponent(s.resource || '');\n  let method, path;\n\n  if (inverse === 'delete_account')      { method = 'DELETE'; path = `/v1/users/${email}`; }\n  else if (inverse === 'remove_group')   { method = 'DELETE'; path = `/v1/users/${email}/groups/${res}`; }\n  else if (inverse === 'revoke_license') { method = 'DELETE'; path = `/v1/users/${email}/licenses/${res}`; }\n\n  out.push({\n    json: {\n      ...s,\n      run_id: runId,\n      compensable: true,\n      inverse_action: inverse,\n      method,\n      url: IDP_BASE + path,\n      // Distinct key: undoing is a different logical operation from doing, so\n      // it must not collide with the original's stored idempotent response.\n      compensation_key: `undo:${s.idempotency_key}`,\n    },\n  });\n}\n\nreturn out;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        384,
+        0
+      ],
+      "id": "a14a5bfd-b85c-4bce-9fe2-b90bbe5f1ed0",
+      "name": "Build Compensations"
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": false
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        560,
+        0
+      ],
+      "id": "c2312c53-833d-4335-8831-1fe17a60580b",
+      "name": "Loop Compensations"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c645c1ec-5bb8-4caf-a241-1a4dfb24b8b2",
+              "leftValue": "={{ $json.compensable }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        736,
+        48
+      ],
+      "id": "861bc4d3-ad44-46ff-bd84-e13013198bb1",
+      "name": "Compensable?"
+    },
+    {
+      "parameters": {
+        "method": "={{ $json.method }}",
+        "url": "={{ $json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Idempotency-Key",
+              "value": "={{ $json.compensation_key }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        896,
+        -48
+      ],
+      "id": "6e405fcb-da76-4c9f-b050-c6d763f9592e",
+      "name": "Undo Step",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 3000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "agBb05wkTODDn2Ls",
+          "name": "Mock IdP Key"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "provisioning_steps",
+          "mode": "list",
+          "cachedResultName": "provisioning_steps"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "compensation_failed",
+            "last_error": "={{ $json.reason }}",
+            "id": "={{ $json.step_id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "run_id",
+              "displayName": "run_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "step_order",
+              "displayName": "step_order",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "action_type",
+              "displayName": "action_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "target_system",
+              "displayName": "target_system",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "resource",
+              "displayName": "resource",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "is_privileged",
+              "displayName": "is_privileged",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "idempotency_key",
+              "displayName": "idempotency_key",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "attempts",
+              "displayName": "attempts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "last_error",
+              "displayName": "last_error",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "request_payload",
+              "displayName": "request_payload",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "response_payload",
+              "displayName": "response_payload",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "verified",
+              "displayName": "verified",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "started_at",
+              "displayName": "started_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "finished_at",
+              "displayName": "finished_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        880,
+        144
+      ],
+      "id": "4e7d8266-4878-4bb0-80bd-cdb7d30a68a1",
+      "name": "Mark Not Compensable",
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const ctx = $('Compensable?').first().json;\nconst r = $input.first().json;\n\nconst code = Number(r.statusCode ?? 0);\nconst ok = code >= 200 && code < 300;\n\nreturn [{\n  json: {\n    step_id: ctx.step_id,\n    run_id: ctx.run_id,\n    inverse_action: ctx.inverse_action,\n    resource: ctx.resource,\n    status_code: code,\n    status: ok ? 'compensated' : 'compensation_failed',\n    last_error: ok ? null\n      : String('undo failed: ' + JSON.stringify(r.error ?? r.body ?? {})).slice(0, 900),\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1056,
+        -48
+      ],
+      "id": "a0031d50-ffe8-4c26-b870-c92a95b8a3a3",
+      "name": "Compensation Result"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "provisioning_steps",
+          "mode": "list",
+          "cachedResultName": "provisioning_steps"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.step_id }}",
+            "status": "={{ $json.status }}",
+            "last_error": "={{ $json.last_error }}",
+            "finished_at": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "run_id",
+              "displayName": "run_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "step_order",
+              "displayName": "step_order",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "action_type",
+              "displayName": "action_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "target_system",
+              "displayName": "target_system",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "resource",
+              "displayName": "resource",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "is_privileged",
+              "displayName": "is_privileged",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "idempotency_key",
+              "displayName": "idempotency_key",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "attempts",
+              "displayName": "attempts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "last_error",
+              "displayName": "last_error",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "request_payload",
+              "displayName": "request_payload",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "response_payload",
+              "displayName": "response_payload",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "verified",
+              "displayName": "verified",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "started_at",
+              "displayName": "started_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "finished_at",
+              "displayName": "finished_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        1200,
+        -48
+      ],
+      "id": "089fd342-a113-4c81-a84b-0b492d2034a6",
+      "name": "Record Compensation",
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "audit_events",
+          "mode": "list",
+          "cachedResultName": "audit_events"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "run_id": "={{ $json.run_id }}",
+            "step_id": "={{ $json.step_id }}",
+            "actor": "system",
+            "event_type": "step_compensated",
+            "detail": "={{ JSON.stringify({ inverse_action: $json.inverse_action, resource: $json.resource, status_code: $json.status_code, outcome: $json.status }) }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "run_id",
+              "displayName": "run_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "step_id",
+              "displayName": "step_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "actor",
+              "displayName": "actor",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "event_type",
+              "displayName": "event_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "detail",
+              "displayName": "detail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        1344,
+        -48
+      ],
+      "id": "197b9beb-6b9e-4a82-925d-421b7026325a",
+      "name": "Audit: step_compensated",
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT count(*) FILTER (WHERE status = 'compensated')         AS compensated,\n       count(*) FILTER (WHERE status = 'compensation_failed') AS compensation_failed,\n       count(*) FILTER (WHERE status = 'succeeded')           AS still_succeeded,\n       count(*) FILTER (WHERE status = 'failed')              AS failed\nFROM provisioning_steps\nWHERE run_id = $1::uuid;",
+        "options": {
+          "queryReplacement": "={{ $('When Executed by Another Workflow').first().json.run_id }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        736,
+        -208
+      ],
+      "id": "a9f068b8-6972-474d-9b7f-c71f83bfeb14",
+      "name": "Summarise Rollback",
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const s = $input.first().json;\nconst failed = Number(s.compensation_failed || 0);\nreturn [{\n  json: {\n    run_id: $('When Executed by Another Workflow').first().json.run_id,\n    compensated: Number(s.compensated || 0),\n    compensation_failed: failed,\n    still_succeeded: Number(s.still_succeeded || 0),\n    failed_steps: Number(s.failed || 0),\n    clean: failed === 0,\n    // 'rolled_back' means the system is clean.\n    // 'failed' means something could not be undone and a human must look.\n    run_status: failed === 0 ? 'rolled_back' : 'failed',\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        -208
+      ],
+      "id": "100434ed-6b77-4a0f-b26e-35d1a469529f",
+      "name": "Rollback Verdict"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "provisioning_runs",
+          "mode": "list",
+          "cachedResultName": "provisioning_runs"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.run_id }}",
+            "status": "={{ $json.run_status }}",
+            "finished_at": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "employee_id",
+              "displayName": "employee_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "run_type",
+              "displayName": "run_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "requires_approval",
+              "displayName": "requires_approval",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "approval_token",
+              "displayName": "approval_token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "approval_sent_at",
+              "displayName": "approval_sent_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "approval_expires_at",
+              "displayName": "approval_expires_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "resume_url",
+              "displayName": "resume_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "approved_by",
+              "displayName": "approved_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "approved_at",
+              "displayName": "approved_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "decision",
+              "displayName": "decision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "requested_by",
+              "displayName": "requested_by",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "idempotency_root",
+              "displayName": "idempotency_root",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "due_at",
+              "displayName": "due_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "started_at",
+              "displayName": "started_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "finished_at",
+              "displayName": "finished_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        1136,
+        -208
+      ],
+      "id": "4df76ca0-af31-4635-8126-1dffa2701b4f",
+      "name": "Close Run",
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "pgeagoni@gmail.com",
+        "toEmail": "pgeagoni@gmail.com",
+        "subject": "={{ '[ACTION REQUIRED] Rollback incomplete for run ' + $('Rollback Verdict').first().json.run_id }}",
+        "html": "=<div style=\"font-family:system-ui,sans-serif;max-width:640px\">\n  <h2 style=\"color:#991b1b\">Manual cleanup required</h2>\n  <p>Run <code>{{ $('Rollback Verdict').first().json.run_id }}</code> failed and could not be fully rolled back.</p>\n  <p>Compensated: {{ $('Rollback Verdict').first().json.compensated }} ·\n     Could not compensate: <b>{{ $('Rollback Verdict').first().json.compensation_failed }}</b></p>\n  <p>Run this to see what is still granted:</p>\n  <pre style=\"background:#f4f4f5;padding:12px;border-radius:6px;font-size:12px\">SELECT step_order, action_type, resource, status, last_error\nFROM provisioning_steps\nWHERE run_id = '{{ $('Rollback Verdict').first().json.run_id }}'\nORDER BY step_order;</pre>\n</div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1520,
+        -160
+      ],
+      "id": "9b615b0e-351f-432b-b725-4dea57b40b04",
+      "name": "Alert Incomplete Rollback",
+      "webhookId": "9bebe8b8-138a-4355-b7af-32189536e2a4",
+      "credentials": {
+        "smtp": {
+          "id": "IJIR7DbTf1qIHJdY",
+          "name": "JML SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2c8bfd01-b51a-4a17-8ddf-e78bdc500638",
+              "leftValue": "={{ $('Rollback Verdict').first().json.clean }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1296,
+        -208
+      ],
+      "id": "e807610d-6072-470a-9ee8-5e103b1d5b45",
+      "name": "Rollback Clean?"
+    },
+    {
+      "parameters": {
+        "jsCode": "const v = $('Rollback Verdict').first().json;\nreturn [{ json: { rolled_back: v.clean, ...v } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1632,
+        -288
+      ],
+      "id": "859ce52f-2db4-44af-8e10-e0f5264fd54d",
+      "name": "Return Result"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Load Succeeded Steps",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Succeeded Steps": {
+      "main": [
+        [
+          {
+            "node": "Build Compensations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Compensations": {
+      "main": [
+        [
+          {
+            "node": "Loop Compensations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Compensations": {
+      "main": [
+        [
+          {
+            "node": "Summarise Rollback",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Compensable?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compensable?": {
+      "main": [
+        [
+          {
+            "node": "Undo Step",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Not Compensable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Undo Step": {
+      "main": [
+        [
+          {
+            "node": "Compensation Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Not Compensable": {
+      "main": [
+        [
+          {
+            "node": "Loop Compensations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compensation Result": {
+      "main": [
+        [
+          {
+            "node": "Record Compensation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record Compensation": {
+      "main": [
+        [
+          {
+            "node": "Audit: step_compensated",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Audit: step_compensated": {
+      "main": [
+        [
+          {
+            "node": "Loop Compensations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarise Rollback": {
+      "main": [
+        [
+          {
+            "node": "Rollback Verdict",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rollback Verdict": {
+      "main": [
+        [
+          {
+            "node": "Close Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Close Run": {
+      "main": [
+        [
+          {
+            "node": "Rollback Clean?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rollback Clean?": {
+      "main": [
+        [
+          {
+            "node": "Return Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Alert Incomplete Rollback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alert Incomplete Rollback": {
+      "main": [
+        [
+          {
+            "node": "Return Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "hKaL0Ag7p8IX1pKS"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "396575a4-1fac-40f4-8312-53335c032e90",
+  "activeVersionId": "396575a4-1fac-40f4-8312-53335c032e90",
+  "versionCounter": 140,
+  "triggerCount": 0,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-08-14T15:59:26.330Z",
+      "createdAt": "2026-08-14T15:59:26.330Z",
+      "role": "workflow:owner",
+      "workflowId": "qDLvxmSWqOTJdknv",
+      "projectId": "RRFbGOMvobFlEqLc",
+      "project": {
+        "updatedAt": "2026-08-14T09:51:41.743Z",
+        "createdAt": "2026-08-12T23:54:23.095Z",
+        "id": "RRFbGOMvobFlEqLc",
+        "name": "Ptheusen Geagoni <pgeagoni@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "302c0129-0bc4-4557-8467-e4e8e9932732"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": "Version 396575a4",
+    "description": ""
+  }
+}

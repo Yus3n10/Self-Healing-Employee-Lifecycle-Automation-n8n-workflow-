@@ -1,0 +1,2726 @@
+{
+  "updatedAt": "2026-08-14T16:40:53.225Z",
+  "createdAt": "2026-08-14T11:12:49.708Z",
+  "id": "MAcqxMhY0dMkarIh",
+  "name": "JML — Intake & Plan",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Employee Lifecycle Request",
+        "formDescription": "Onboarding and offboarding requests. Demo system. Synthetic data only.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Request Type",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "onboard"
+                  },
+                  {
+                    "option": "offboard"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Employee Reference",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Full Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Personal Email",
+              "fieldType": "email"
+            },
+            {
+              "fieldLabel": "Department",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Engineering"
+                  },
+                  {
+                    "option": "Sales"
+                  },
+                  {
+                    "option": "Finance"
+                  },
+                  {
+                    "option": "Support"
+                  },
+                  {
+                    "option": "IT"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Role Code",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "ENG_JUNIOR"
+                  },
+                  {
+                    "option": "ENG_SENIOR"
+                  },
+                  {
+                    "option": "SALES_REP"
+                  },
+                  {
+                    "option": "FIN_ANALYST"
+                  },
+                  {
+                    "option": "SUPPORT_AGENT"
+                  },
+                  {
+                    "option": "IT_ADMIN"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Manager Email",
+              "fieldType": "email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Effective Date",
+              "fieldType": "date",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Requested By",
+              "fieldType": "email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Notes",
+              "fieldType": "textarea"
+            }
+          ]
+        },
+        "options": {
+          "path": "jml-request",
+          "respondWithOptions": {
+            "values": {
+              "formSubmittedText": "Request received. You will get an email if approval is needed."
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        -112
+      ],
+      "id": "beac9536-fc34-4b66-a40c-c19b0a05ad4e",
+      "name": "On form submission",
+      "webhookId": "46e45557-dff3-4c93-b553-c34765a3df98"
+    },
+    {
+      "parameters": {
+        "jsCode": "const WORK_EMAIL_DOMAIN = 'demo-corp.test';\n\nconst VALID_ROLES = ['ENG_JUNIOR', 'ENG_SENIOR', 'SALES_REP',\n                     'FIN_ANALYST', 'SUPPORT_AGENT', 'IT_ADMIN'];\nconst VALID_DEPTS = ['Engineering', 'Sales', 'Finance', 'Support', 'IT'];\nconst ROLE_DEPT = {\n  ENG_JUNIOR: 'Engineering', ENG_SENIOR: 'Engineering',\n  SALES_REP: 'Sales',        FIN_ANALYST: 'Finance',\n  SUPPORT_AGENT: 'Support',  IT_ADMIN: 'IT',\n};\n\nconst f = $input.first().json;\nconst s = (v) => String(v ?? '').trim();\n\nconst req = {\n  request_type:   s(f['Request Type']).toLowerCase(),\n  employee_ref:   s(f['Employee Reference']).toUpperCase(),\n  full_name:      s(f['Full Name']),\n  personal_email: s(f['Personal Email']).toLowerCase() || null,\n  department:     s(f['Department']),\n  role_code:      s(f['Role Code']).toUpperCase(),\n  manager_email:  s(f['Manager Email']).toLowerCase(),\n  effective_date: s(f['Effective Date']).slice(0, 10),\n  requested_by:   s(f['Requested By']).toLowerCase(),\n  notes:          s(f['Notes']),\n};\n\nconst parts = req.full_name\n  .normalize('NFKD')\n  .replace(/[^\\w\\s-]/g, '')\n  .trim()\n  .toLowerCase()\n  .split(/\\s+/)\n  .filter(Boolean);\nconst local = parts.length >= 2 ? `${parts[0]}.${parts[parts.length - 1]}`\n                                : (parts[0] || 'unknown');\nreq.work_email = `${local}@${WORK_EMAIL_DOMAIN}`;\n\nconst errors = [];\nconst emailRe = /^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/;\nconst dateRe = /^\\d{4}-\\d{2}-\\d{2}$/;\n\nif (!['onboard', 'offboard'].includes(req.request_type)) {\n  errors.push('request_type must be onboard or offboard');\n}\nif (!/^E-\\d{3,}$/.test(req.employee_ref)) {\n  errors.push('employee_ref must look like E-001');\n}\nif (req.full_name.length < 3) {\n  errors.push('full_name is too short');\n}\nif (!VALID_ROLES.includes(req.role_code)) {\n  errors.push(`role_code must be one of ${VALID_ROLES.join(', ')}`);\n}\nif (!VALID_DEPTS.includes(req.department)) {\n  errors.push(`department must be one of ${VALID_DEPTS.join(', ')}`);\n}\nif (ROLE_DEPT[req.role_code] && ROLE_DEPT[req.role_code] !== req.department) {\n  errors.push(`role ${req.role_code} belongs to ${ROLE_DEPT[req.role_code]}, not ${req.department}`);\n}\nif (!emailRe.test(req.manager_email))  errors.push('manager_email is not a valid email');\nif (!emailRe.test(req.requested_by))   errors.push('requested_by is not a valid email');\nif (req.personal_email && !emailRe.test(req.personal_email)) {\n  errors.push('personal_email is not a valid email');\n}\nif (!dateRe.test(req.effective_date))  errors.push('effective_date must be YYYY-MM-DD');\n\nreq.idempotency_root = `${req.request_type}:${req.employee_ref}:${req.effective_date}`;\nreq.start_date  = req.request_type === 'onboard'  ? req.effective_date : null;\nreq.end_date    = req.request_type === 'offboard' ? req.effective_date : null;\nreq.valid       = errors.length === 0;\nreq.errors      = errors;\nreq.received_at = new Date().toISOString();\n\nreturn [{ json: req }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        176,
+        -112
+      ],
+      "id": "063164e4-c5c7-4ddf-b3a7-44e3bac1adee",
+      "name": "Normalize Request"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5c5e35f3-0f37-4cbf-9f5e-7880ca35b89c",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        336,
+        -112
+      ],
+      "id": "e8f15d39-faaf-49c6-af88-dcca5911d772",
+      "name": "Validity Check"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "employees",
+          "mode": "list",
+          "cachedResultName": "employees"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "employee_ref": "={{ $json.employee_ref }}",
+            "full_name": "={{ $json.full_name }}",
+            "personal_email": "={{ $json.personal_email }}",
+            "work_email": "={{ $json.work_email }}",
+            "role_code": "={{ $json.role_code }}",
+            "department": "={{ $json.department }}",
+            "manager_email": "={{ $json.manager_email }}",
+            "start_date": "={{ $json.start_date }}",
+            "end_date": "={{ $json.end_date }}",
+            "status": "={{ $json.request_type === 'onboard' ? 'pending' : 'offboarding' }}",
+            "updated_at": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [
+            "employee_ref"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "employee_ref",
+              "displayName": "employee_ref",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "full_name",
+              "displayName": "full_name",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "personal_email",
+              "displayName": "personal_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "work_email",
+              "displayName": "work_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "role_code",
+              "displayName": "role_code",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "department",
+              "displayName": "department",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "manager_email",
+              "displayName": "manager_email",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "start_date",
+              "displayName": "start_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "end_date",
+              "displayName": "end_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        496,
+        -192
+      ],
+      "id": "88c358e4-5522-4944-8c17-eee7bf2f93a3",
+      "name": "Upsert Employee",
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ 'Rejected: ' + $json.errors.join('; ') }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        496,
+        -32
+      ],
+      "id": "f9e8be2b-36b1-4b21-bd3a-ac756c8c815b",
+      "name": "Reject Invalid Reques"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "provisioning_runs",
+          "mode": "list",
+          "cachedResultName": "provisioning_runs"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "idempotency_root",
+              "value": "={{ $('Normalize Request').item.json.idempotency_root }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        656,
+        -192
+      ],
+      "id": "295bcd65-1273-4bbd-a269-4a8ec145a5ad",
+      "name": "Check Duplicate Run",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "audit_events",
+          "mode": "list",
+          "cachedResultName": "audit_events"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "run_id": "={{ $json.id }}",
+            "actor": "system",
+            "event_type": "duplicate_request_blocked",
+            "detail": "={{ JSON.stringify({ idempotency_root: $('Normalize Request').item.json.idempotency_root, existing_run_status: $json.status, requested_by: $('Normalize Request').item.json.requested_by }) }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "run_id",
+              "displayName": "run_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "step_id",
+              "displayName": "step_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "actor",
+              "displayName": "actor",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "event_type",
+              "displayName": "event_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "detail",
+              "displayName": "detail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        976,
+        -80
+      ],
+      "id": "8919c0f4-b665-461d-a3a7-6823df06a581",
+      "name": "Log Duplicate",
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0a4efdc8-9858-47aa-95b0-24718078bd80",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        816,
+        -192
+      ],
+      "id": "dd1ac022-4646-4784-8baa-6e3681513901",
+      "name": "Is New Run?"
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ 'Duplicate request blocked. Run ' + $('Check Duplicate Run').item.json.id + ' already exists with status ' + $('Check Duplicate Run').item.json.status }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        -80
+      ],
+      "id": "a4699272-8c07-4e10-b4f5-67ecf6d4cdae",
+      "name": "Stop (Duplicate)"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Normalize Request').item.json.request_type }}",
+                    "rightValue": "onboard",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "4e99f52e-df49-4951-b40b-ebf46b36c5cc"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "onboard"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "292e08ab-7c3c-4492-bc7e-60c5720417ec",
+                    "leftValue": "={{ $('Normalize Request').item.json.request_type }}",
+                    "rightValue": "offboard",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "offboard"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "none"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        976,
+        -288
+      ],
+      "id": "5a52907f-d669-4d73-9684-5411739ef347",
+      "name": "Route By Type"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "role_entitlements",
+          "mode": "list",
+          "cachedResultName": "role_entitlements"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "role_code",
+              "value": "={{ $('Normalize Request').item.json.role_code }}"
+            },
+            {
+              "column": "department",
+              "value": "={{ $('Normalize Request').item.json.department }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        1136,
+        -384
+      ],
+      "id": "b5839842-969b-4925-8a2a-a7c06dea8349",
+      "name": "Load Entitlements",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ 'http://127.0.0.1:8100/v1/users/' + encodeURIComponent($('Normalize Request').item.json.work_email) }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1136,
+        -224
+      ],
+      "id": "a3bd72ec-2cdf-49c0-bf3c-229c2ac772d8",
+      "name": "Read Current State",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "agBb05wkTODDn2Ls",
+          "name": "Mock IdP Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const req = $('Normalize Request').first().json;\nconst employee = $('Upsert Employee').first().json;\nconst items = $input.all().map(i => i.json);\n\nconst steps = [];\n\nif (req.request_type === 'onboard') {\n  const ents = items\n    .filter(r => r && r.action_type)\n    .sort((a, b) => a.step_order - b.step_order);\n\n  if (ents.length === 0) {\n    throw new Error(\n      `No entitlements defined for role ${req.role_code} in ${req.department}. ` +\n      `Add rows to role_entitlements before provisioning this role.`\n    );\n  }\n  for (const e of ents) {\n    steps.push({\n      step_order:    e.step_order,\n      action_type:   e.action_type,\n      target_system: e.target_system,\n      resource:      e.resource || '',\n      is_privileged: e.is_privileged === true,\n    });\n  }\n} else {\n  const res = items[0] || {};\n  const status = res.statusCode;\n  const user = res.body || {};\n\n  if (status !== 200) {\n    throw new Error(\n      `Cannot plan offboarding: IdP returned ${status} for ${req.work_email}.`\n    );\n  }\n\n  steps.push({ step_order: 10, action_type: 'revoke_sessions',\n               target_system: 'mockidp', resource: '', is_privileged: false });\n\n  let order = 20;\n  for (const g of (user.groups || [])) {\n    steps.push({ step_order: order++, action_type: 'remove_group',\n                 target_system: 'mockidp', resource: g, is_privileged: false });\n  }\n  order = 50;\n  for (const sku of (user.licenses || [])) {\n    steps.push({ step_order: order++, action_type: 'revoke_license',\n                 target_system: 'mockidp', resource: sku, is_privileged: false });\n  }\n  steps.push({ step_order: 90, action_type: 'suspend_account',\n               target_system: 'mockidp', resource: '', is_privileged: false });\n}\n\nconst hasPrivileged = steps.some(s => s.is_privileged);\nconst isAdminRole   = req.role_code === 'IT_ADMIN';\nconst requiresApproval = hasPrivileged || isAdminRole;\n\nconst rnd = () =>\n  (globalThis.crypto && globalThis.crypto.randomUUID)\n    ? globalThis.crypto.randomUUID().replace(/-/g, '')\n    : Array.from({ length: 32 },\n        () => Math.floor(Math.random() * 16).toString(16)).join('');\n\n// The Wait node does not exist yet, so resumeUrl may be unavailable.\n// Step 7 adds the Wait node and this starts returning a real URL.\nlet resumeUrl = null;\nif (requiresApproval) {\n  try { resumeUrl = $execution.resumeUrl || null; } catch (e) { resumeUrl = null; }\n}\n\nconst dueHour = req.request_type === 'onboard' ? 9 : 17;\nconst due = DateTime\n  .fromISO(req.effective_date, { zone: 'Asia/Manila' })\n  .set({ hour: dueHour, minute: 0, second: 0 });\n\nreturn [{ json: {\n  employee_id:       employee.id,\n  work_email:        req.work_email,\n  run_type:          req.request_type,\n  requires_approval: requiresApproval,\n  approval_reason:   hasPrivileged\n                       ? steps.filter(s => s.is_privileged)\n                              .map(s => `${s.action_type}:${s.resource}`).join(', ')\n                       : (isAdminRole ? 'role IT_ADMIN' : ''),\n  approval_token:      requiresApproval ? rnd() : null,\n  approval_expires_at: requiresApproval ? DateTime.now().plus({ hours: 24 }).toISO() : null,\n  resume_url:          resumeUrl,\n  status:              requiresApproval ? 'awaiting_approval' : 'planned',\n  requested_by:        req.requested_by,\n  idempotency_root:    req.idempotency_root,\n  due_at:              due.toISO(),\n  step_count:          steps.length,\n  steps:               steps.map(s => ({\n    ...s,\n    idempotency_key: `${req.idempotency_root}:${s.step_order}:${s.action_type}:${s.resource}`,\n  })),\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1296,
+        -304
+      ],
+      "id": "d827b3ad-6647-4e56-908e-f73e807c3bcd",
+      "name": "Build Plan"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "provisioning_runs",
+          "mode": "list",
+          "cachedResultName": "provisioning_runs"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "requires_approval": "={{ $json.requires_approval }}",
+            "employee_id": "={{ $json.employee_id }}",
+            "run_type": "={{ $json.run_type }}",
+            "status": "={{ $json.status }}",
+            "approval_token": "={{ $json.approval_token }}",
+            "approval_expires_at": "={{ $json.approval_expires_at }}",
+            "resume_url": "={{ $json.resume_url }}",
+            "approved_by": "=",
+            "requested_by": "={{ $json.requested_by }}",
+            "idempotency_root": "={{ $json.idempotency_root }}",
+            "due_at": "={{ $json.due_at }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "employee_id",
+              "displayName": "employee_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "run_type",
+              "displayName": "run_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "requires_approval",
+              "displayName": "requires_approval",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "approval_token",
+              "displayName": "approval_token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "approval_sent_at",
+              "displayName": "approval_sent_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "approval_expires_at",
+              "displayName": "approval_expires_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "resume_url",
+              "displayName": "resume_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "approved_by",
+              "displayName": "approved_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "approved_at",
+              "displayName": "approved_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "decision",
+              "displayName": "decision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "requested_by",
+              "displayName": "requested_by",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "idempotency_root",
+              "displayName": "idempotency_root",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "due_at",
+              "displayName": "due_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "started_at",
+              "displayName": "started_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "finished_at",
+              "displayName": "finished_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        1440,
+        -304
+      ],
+      "id": "66ab3cfc-c09f-4df8-9196-22d9096ea5ed",
+      "name": "Create Run",
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const run = $('Create Run').first().json;\nconst plan = $('Build Plan').first().json;\n\nreturn plan.steps.map(s => ({\n  json: {\n    run_id:          run.id,\n    step_order:      s.step_order,\n    action_type:     s.action_type,\n    target_system:   s.target_system,\n    resource:        s.resource,\n    is_privileged:   s.is_privileged,\n    idempotency_key: s.idempotency_key,\n    status:          'pending',\n  },\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1584,
+        -304
+      ],
+      "id": "8a9997e5-f8b7-4809-8cd6-271ce3beb66f",
+      "name": "Expand Steps"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "provisioning_steps",
+          "mode": "list",
+          "cachedResultName": "provisioning_steps"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "is_privileged": false,
+            "verified": false,
+            "step_order": 0,
+            "attempts": 0
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "run_id",
+              "displayName": "run_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "step_order",
+              "displayName": "step_order",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "action_type",
+              "displayName": "action_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "target_system",
+              "displayName": "target_system",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "resource",
+              "displayName": "resource",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "is_privileged",
+              "displayName": "is_privileged",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "idempotency_key",
+              "displayName": "idempotency_key",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "attempts",
+              "displayName": "attempts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_error",
+              "displayName": "last_error",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "request_payload",
+              "displayName": "request_payload",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "response_payload",
+              "displayName": "response_payload",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "verified",
+              "displayName": "verified",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "started_at",
+              "displayName": "started_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "finished_at",
+              "displayName": "finished_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        1728,
+        -304
+      ],
+      "id": "2f479879-def8-448b-a674-03d992678206",
+      "name": "Insert Steps",
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "audit_events",
+          "mode": "list",
+          "cachedResultName": "audit_events"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "run_id": "={{ $('Create Run').first().json.id }}",
+            "actor": "={{ $('Normalize Request').first().json.requested_by }}",
+            "event_type": "run_planned",
+            "detail": "={{ JSON.stringify({ run_type: $('Build Plan').first().json.run_type, step_count: $('Build Plan').first().json.step_count, requires_approval: $('Build Plan').first().json.requires_approval, approval_reason: $('Build Plan').first().json.approval_reason, steps: $('Build Plan').first().json.steps.map(s => s.step_order + ':' + s.action_type + ':' + s.resource), due_at: $('Build Plan').first().json.due_at }) }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "run_id",
+              "displayName": "run_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "step_id",
+              "displayName": "step_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "actor",
+              "displayName": "actor",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "event_type",
+              "displayName": "event_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "detail",
+              "displayName": "detail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        1872,
+        -304
+      ],
+      "id": "9d7621ae-feeb-41df-a672-29c9e9a02f52",
+      "name": "Audit: run_planned",
+      "executeOnce": true,
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "94ab2f61-0c6f-4ad3-9dc4-c04db268590b",
+              "leftValue": "={{ $('Build Plan').first().json.requires_approval }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2016,
+        -304
+      ],
+      "id": "c1fd9bc5-c1d1-45ee-8772-1fcea60108d9",
+      "name": "Approval Check",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "provisioning_runs",
+          "mode": "list",
+          "cachedResultName": "provisioning_runs"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('Create Run').first().json.id }}",
+            "approval_sent_at": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "employee_id",
+              "displayName": "employee_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "run_type",
+              "displayName": "run_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "requires_approval",
+              "displayName": "requires_approval",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "approval_token",
+              "displayName": "approval_token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "approval_sent_at",
+              "displayName": "approval_sent_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "approval_expires_at",
+              "displayName": "approval_expires_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "resume_url",
+              "displayName": "resume_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "approved_by",
+              "displayName": "approved_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "approved_at",
+              "displayName": "approved_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "decision",
+              "displayName": "decision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "requested_by",
+              "displayName": "requested_by",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "idempotency_root",
+              "displayName": "idempotency_root",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "due_at",
+              "displayName": "due_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "started_at",
+              "displayName": "started_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "finished_at",
+              "displayName": "finished_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        2336,
+        -416
+      ],
+      "id": "db6647ee-67b8-47e5-85a8-d35256c8f093",
+      "name": "Mark Approval Sent",
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "pgeagoni@gmail.com",
+        "toEmail": "pgeagoni@gmail.com",
+        "subject": "={{ '[Approval needed] ' + $('Build Plan').first().json.run_type + ' — ' + $('Normalize Request').first().json.full_name + ' (' + $('Normalize Request').first().json.role_code + ')' }}",
+        "html": "=<div style=\"font-family:system-ui,-apple-system,Segoe UI,sans-serif;max-width:640px\">\n  <h2 style=\"margin:0 0 4px\">Approval required</h2>\n  <p style=\"color:#555;margin:0 0 16px\">\n    Intended approver: <b>{{ $('Normalize Request').first().json.manager_email }}</b><br>\n    Requested by: {{ $('Normalize Request').first().json.requested_by }}\n  </p>\n  <table cellpadding=\"6\" style=\"border-collapse:collapse;font-size:14px\">\n    <tr><td><b>Request</b></td><td>{{ $('Build Plan').first().json.run_type }}</td></tr>\n    <tr><td><b>Person</b></td><td>{{ $('Normalize Request').first().json.full_name }} ({{ $('Normalize Request').first().json.employee_ref }})</td></tr>\n    <tr><td><b>Role</b></td><td>{{ $('Normalize Request').first().json.role_code }} / {{ $('Normalize Request').first().json.department }}</td></tr>\n    <tr><td><b>Work email</b></td><td>{{ $('Build Plan').first().json.work_email }}</td></tr>\n    <tr><td><b>Effective</b></td><td>{{ $('Normalize Request').first().json.effective_date }}</td></tr>\n    <tr><td><b>Why approval</b></td><td style=\"color:#b00\">{{ $('Build Plan').first().json.approval_reason }}</td></tr>\n    <tr><td><b>Run ID</b></td><td><code>{{ $('Create Run').first().json.id }}</code></td></tr>\n  </table>\n  <h3 style=\"margin:20px 0 6px\">Plan ({{ $('Build Plan').first().json.step_count }} steps)</h3>\n  <pre style=\"background:#f4f4f5;padding:12px;border-radius:6px;font-size:13px\">{{ $('Build Plan').first().json.steps.map(s => (s.is_privileged ? '[PRIVILEGED] ' : '&nbsp;&nbsp;&nbsp;&nbsp;') + s.step_order + '  ' + s.action_type + '  ' + s.resource).join('<br>') }}</pre>\n  <p style=\"margin:24px 0\">\n    <a href=\"http://localhost:5678/webhook/jml-approval?token={{ $('Build Plan').first().json.approval_token }}&amp;decision=approve\"\n       style=\"background:#166534;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;margin-right:8px\">Approve</a>\n    <a href=\"http://localhost:5678/webhook/jml-approval?token={{ $('Build Plan').first().json.approval_token }}&amp;decision=reject\"\n       style=\"background:#991b1b;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none\">Reject</a>\n  </p>\n  <p style=\"color:#777;font-size:12px\">\n    Expires {{ $('Build Plan').first().json.approval_expires_at }}.\n    If nobody acts before then the run is marked expired and nothing is provisioned.\n    Demo system, synthetic data.\n  </p>\n</div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2160,
+        -416
+      ],
+      "id": "8ad36b2f-0790-44f0-b7b6-78aa31fb6c13",
+      "name": "Send Approval Email",
+      "webhookId": "d4532eea-3e10-4cf6-b1bc-0e9e1d9c2f99",
+      "credentials": {
+        "smtp": {
+          "id": "IJIR7DbTf1qIHJdY",
+          "name": "JML SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "limitWaitTime": true,
+        "resumeAmount": 24,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2496,
+        -416
+      ],
+      "id": "78162d8f-ced9-4aae-a3d6-e963ff1bd3e2",
+      "name": "Wait For Approval",
+      "webhookId": "a0f6f13c-45e5-496e-bad0-3b542a666b58"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "provisioning_runs",
+          "mode": "list",
+          "cachedResultName": "provisioning_runs"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "id",
+              "value": "={{ $('Create Run').first().json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        2640,
+        -416
+      ],
+      "id": "734dc39d-a872-4ff6-ac23-99994947032c",
+      "name": "Load Decision",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.decision }}",
+                    "rightValue": "approved",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "ce87a589-232b-4006-a73c-e03c7ed449e0"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "approved"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "7394ab08-8b36-416b-839a-6599e293fc23",
+                    "leftValue": "={{ $json.decision }}",
+                    "rightValue": "rejected",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "rejected"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "expired"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        2832,
+        -368
+      ],
+      "id": "27917ebf-8620-41a9-ae06-8305b999ae9b",
+      "name": "Decision?"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "provisioning_runs",
+          "mode": "list",
+          "cachedResultName": "provisioning_runs"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('Create Run').first().json.id }}",
+            "status": "rejected",
+            "finished_at": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "employee_id",
+              "displayName": "employee_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "run_type",
+              "displayName": "run_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "requires_approval",
+              "displayName": "requires_approval",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "approval_token",
+              "displayName": "approval_token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "approval_sent_at",
+              "displayName": "approval_sent_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "approval_expires_at",
+              "displayName": "approval_expires_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "resume_url",
+              "displayName": "resume_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "approved_by",
+              "displayName": "approved_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "approved_at",
+              "displayName": "approved_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "decision",
+              "displayName": "decision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "requested_by",
+              "displayName": "requested_by",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "idempotency_root",
+              "displayName": "idempotency_root",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "due_at",
+              "displayName": "due_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "started_at",
+              "displayName": "started_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "finished_at",
+              "displayName": "finished_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        3040,
+        -352
+      ],
+      "id": "dffbb6e1-bcc4-438c-8df3-91e94e676a7f",
+      "name": "Close Rejected",
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "audit_events",
+          "mode": "list",
+          "cachedResultName": "audit_events"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "run_id": "={{ $('Create Run').first().json.id }}",
+            "actor": "system",
+            "event_type": "approval_rejected",
+            "detail": "={{ JSON.stringify({ decided_at: $now.toISO() }) }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "run_id",
+              "displayName": "run_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "step_id",
+              "displayName": "step_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "actor",
+              "displayName": "actor",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "event_type",
+              "displayName": "event_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "detail",
+              "displayName": "detail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        3184,
+        -352
+      ],
+      "id": "326343c6-467f-4558-8407-7c1edd98e750",
+      "name": "Audit: rejected",
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "provisioning_runs",
+          "mode": "list",
+          "cachedResultName": "provisioning_runs"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('Create Run').first().json.id }}",
+            "status": "expired",
+            "finished_at": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "employee_id",
+              "displayName": "employee_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "run_type",
+              "displayName": "run_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "requires_approval",
+              "displayName": "requires_approval",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "approval_token",
+              "displayName": "approval_token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "approval_sent_at",
+              "displayName": "approval_sent_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "approval_expires_at",
+              "displayName": "approval_expires_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "resume_url",
+              "displayName": "resume_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "approved_by",
+              "displayName": "approved_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "approved_at",
+              "displayName": "approved_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "decision",
+              "displayName": "decision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "requested_by",
+              "displayName": "requested_by",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "idempotency_root",
+              "displayName": "idempotency_root",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "due_at",
+              "displayName": "due_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "started_at",
+              "displayName": "started_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "finished_at",
+              "displayName": "finished_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        3040,
+        -192
+      ],
+      "id": "8dcb3efe-b309-4693-8143-711c2c7ab766",
+      "name": "Close Expired",
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "audit_events",
+          "mode": "list",
+          "cachedResultName": "audit_events"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "run_id": "={{ $('Create Run').first().json.id }}",
+            "actor": "system",
+            "event_type": "approval_expired",
+            "detail": "={{ JSON.stringify({ decided_at: $now.toISO() }) }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "run_id",
+              "displayName": "run_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "step_id",
+              "displayName": "step_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "actor",
+              "displayName": "actor",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "event_type",
+              "displayName": "event_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "detail",
+              "displayName": "detail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        3184,
+        -192
+      ],
+      "id": "a74bc3d3-7292-4b99-8662-694b768c872e",
+      "name": "Audit: expired",
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "NJ7XwqO5CjklonVS",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/NJ7XwqO5CjklonVS",
+          "cachedResultName": "JML — Execute Plan"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "run_id": "={{ $('Create Run').first().json.id }}"
+          },
+          "matchingColumns": [
+            "run_id"
+          ],
+          "schema": [
+            {
+              "id": "run_id",
+              "displayName": "run_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2704,
+        -128
+      ],
+      "id": "8723b313-8b7e-40c3-b8e8-8aec1fa27783",
+      "name": "Execute Plan"
+    }
+  ],
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Normalize Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Request": {
+      "main": [
+        [
+          {
+            "node": "Validity Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validity Check": {
+      "main": [
+        [
+          {
+            "node": "Upsert Employee",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject Invalid Reques",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Employee": {
+      "main": [
+        [
+          {
+            "node": "Check Duplicate Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Duplicate Run": {
+      "main": [
+        [
+          {
+            "node": "Is New Run?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Duplicate": {
+      "main": [
+        [
+          {
+            "node": "Stop (Duplicate)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is New Run?": {
+      "main": [
+        [
+          {
+            "node": "Route By Type",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route By Type": {
+      "main": [
+        [
+          {
+            "node": "Load Entitlements",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Read Current State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Entitlements": {
+      "main": [
+        [
+          {
+            "node": "Build Plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Current State": {
+      "main": [
+        [
+          {
+            "node": "Build Plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Plan": {
+      "main": [
+        [
+          {
+            "node": "Create Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Run": {
+      "main": [
+        [
+          {
+            "node": "Expand Steps",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Expand Steps": {
+      "main": [
+        [
+          {
+            "node": "Insert Steps",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Steps": {
+      "main": [
+        [
+          {
+            "node": "Audit: run_planned",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Audit: run_planned": {
+      "main": [
+        [
+          {
+            "node": "Approval Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approval Check": {
+      "main": [
+        [
+          {
+            "node": "Send Approval Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Approval Email": {
+      "main": [
+        [
+          {
+            "node": "Mark Approval Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Approval Sent": {
+      "main": [
+        [
+          {
+            "node": "Wait For Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait For Approval": {
+      "main": [
+        [
+          {
+            "node": "Load Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Decision": {
+      "main": [
+        [
+          {
+            "node": "Decision?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decision?": {
+      "main": [
+        [
+          {
+            "node": "Execute Plan",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Close Rejected",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Close Expired",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Close Rejected": {
+      "main": [
+        [
+          {
+            "node": "Audit: rejected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Close Expired": {
+      "main": [
+        [
+          {
+            "node": "Audit: expired",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": 60,
+    "errorWorkflow": "hKaL0Ag7p8IX1pKS"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "385a2e54-7a5e-453f-8a27-7ab5a19ec558",
+  "activeVersionId": "385a2e54-7a5e-453f-8a27-7ab5a19ec558",
+  "versionCounter": 423,
+  "triggerCount": 1,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-08-14T11:12:49.715Z",
+      "createdAt": "2026-08-14T11:12:49.715Z",
+      "role": "workflow:owner",
+      "workflowId": "MAcqxMhY0dMkarIh",
+      "projectId": "RRFbGOMvobFlEqLc",
+      "project": {
+        "updatedAt": "2026-08-14T09:51:41.743Z",
+        "createdAt": "2026-08-12T23:54:23.095Z",
+        "id": "RRFbGOMvobFlEqLc",
+        "name": "Ptheusen Geagoni <pgeagoni@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "302c0129-0bc4-4557-8467-e4e8e9932732"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": "Version 385a2e54",
+    "description": ""
+  }
+}
