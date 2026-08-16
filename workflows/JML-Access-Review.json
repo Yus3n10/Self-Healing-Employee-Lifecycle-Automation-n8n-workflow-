@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-16T00:21:36.028Z",
+  "updatedAt": "2026-08-16T00:31:35.989Z",
   "createdAt": "2026-08-15T23:46:27.573Z",
   "id": "9nByZtDTqfjtA8yZ",
   "name": "JML — Access Review",
@@ -399,7 +399,9 @@
     "availableInMCP": false,
     "timeSavedMode": "fixed",
     "saveManualExecutions": true,
-    "callerPolicy": "workflowsFromSameOwner"
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "hKaL0Ag7p8IX1pKS",
+    "timezone": "Asia/Manila"
   },
   "staticData": {
     "node:Weekly": {
@@ -417,8 +419,8 @@
   "nodeGroups": [],
   "pinData": {},
   "versionId": "6d99ff57-ceec-47bd-9af2-f1099e6fd246",
-  "activeVersionId": "fd5a78c4-4853-4f9b-aa4f-0100a5de13ba",
-  "versionCounter": 77,
+  "activeVersionId": "6d99ff57-ceec-47bd-9af2-f1099e6fd246",
+  "versionCounter": 79,
   "triggerCount": 1,
   "sourceWorkflowId": null,
   "tags": [],
@@ -443,7 +445,7 @@
     }
   ],
   "versionMetadata": {
-    "name": null,
-    "description": null
+    "name": "Version 6d99ff57",
+    "description": ""
   }
 }

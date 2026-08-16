@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-14T16:18:47.991Z",
+  "updatedAt": "2026-08-16T00:33:18.687Z",
   "createdAt": "2026-08-14T16:16:17.677Z",
   "id": "hKaL0Ag7p8IX1pKS",
   "name": "JML — Error Handler",
@@ -217,7 +217,8 @@
     "availableInMCP": false,
     "timeSavedMode": "fixed",
     "saveManualExecutions": true,
-    "callerPolicy": "workflowsFromSameOwner"
+    "callerPolicy": "workflowsFromSameOwner",
+    "timezone": "Asia/Manila"
   },
   "staticData": null,
   "meta": {
@@ -227,7 +228,7 @@
   "pinData": {},
   "versionId": "c09ca59e-9318-422b-b61b-89173cdeb423",
   "activeVersionId": "c09ca59e-9318-422b-b61b-89173cdeb423",
-  "versionCounter": 23,
+  "versionCounter": 24,
   "triggerCount": 0,
   "sourceWorkflowId": null,
   "tags": [],

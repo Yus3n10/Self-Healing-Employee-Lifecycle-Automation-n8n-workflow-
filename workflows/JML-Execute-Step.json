@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-14T16:33:41.222Z",
+  "updatedAt": "2026-08-16T00:32:39.113Z",
   "createdAt": "2026-08-14T15:03:14.515Z",
   "id": "jHGECpLGsjLBcQop",
   "name": "JML — Execute Step",
@@ -1228,7 +1228,8 @@
     "timeSavedMode": "fixed",
     "saveManualExecutions": true,
     "callerPolicy": "workflowsFromSameOwner",
-    "errorWorkflow": "hKaL0Ag7p8IX1pKS"
+    "errorWorkflow": "hKaL0Ag7p8IX1pKS",
+    "timezone": "Asia/Manila"
   },
   "staticData": null,
   "meta": {
@@ -1237,8 +1238,8 @@
   "nodeGroups": [],
   "pinData": {},
   "versionId": "9a3621f9-73b2-4b7d-b47e-1dcfc334c930",
-  "activeVersionId": "b6dbb948-3fc5-446b-a260-fd945cf565ab",
-  "versionCounter": 139,
+  "activeVersionId": "9a3621f9-73b2-4b7d-b47e-1dcfc334c930",
+  "versionCounter": 140,
   "triggerCount": 0,
   "sourceWorkflowId": null,
   "tags": [],
@@ -1263,7 +1264,7 @@
     }
   ],
   "versionMetadata": {
-    "name": null,
-    "description": null
+    "name": "Version 9a3621f9",
+    "description": ""
   }
 }

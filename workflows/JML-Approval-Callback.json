@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-14T16:29:27.257Z",
+  "updatedAt": "2026-08-16T00:33:07.271Z",
   "createdAt": "2026-08-14T13:54:11.824Z",
   "id": "UznA4O3BAQEv9wWi",
   "name": "JML — Approval Callback",
@@ -625,7 +625,8 @@
     "timeSavedMode": "fixed",
     "saveManualExecutions": true,
     "callerPolicy": "workflowsFromSameOwner",
-    "errorWorkflow": "hKaL0Ag7p8IX1pKS"
+    "errorWorkflow": "hKaL0Ag7p8IX1pKS",
+    "timezone": "Asia/Manila"
   },
   "staticData": null,
   "meta": {
@@ -634,8 +635,8 @@
   "nodeGroups": [],
   "pinData": {},
   "versionId": "b00f0b64-4fa8-4698-b633-dd67566acdff",
-  "activeVersionId": "d46c68f7-36d6-4680-b26f-1f9d32c179db",
-  "versionCounter": 101,
+  "activeVersionId": "b00f0b64-4fa8-4698-b633-dd67566acdff",
+  "versionCounter": 102,
   "triggerCount": 1,
   "sourceWorkflowId": null,
   "tags": [],
@@ -660,7 +661,7 @@
     }
   ],
   "versionMetadata": {
-    "name": null,
-    "description": null
+    "name": "Version b00f0b64",
+    "description": ""
   }
 }

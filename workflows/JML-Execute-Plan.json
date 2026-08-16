@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-14T16:34:51.817Z",
+  "updatedAt": "2026-08-16T00:32:23.027Z",
   "createdAt": "2026-08-14T15:27:59.038Z",
   "id": "NJ7XwqO5CjklonVS",
   "name": "JML — Execute Plan",
@@ -973,7 +973,8 @@
     "timeSavedMode": "fixed",
     "saveManualExecutions": true,
     "callerPolicy": "workflowsFromSameOwner",
-    "errorWorkflow": "hKaL0Ag7p8IX1pKS"
+    "errorWorkflow": "hKaL0Ag7p8IX1pKS",
+    "timezone": "Asia/Manila"
   },
   "staticData": null,
   "meta": {
@@ -983,7 +984,7 @@
   "pinData": {},
   "versionId": "215d9fa4-fc81-4f6e-89a5-4b4e6e3c3b2a",
   "activeVersionId": "215d9fa4-fc81-4f6e-89a5-4b4e6e3c3b2a",
-  "versionCounter": 79,
+  "versionCounter": 80,
   "triggerCount": 0,
   "sourceWorkflowId": null,
   "tags": [],

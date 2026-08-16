@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-15T23:41:31.997Z",
+  "updatedAt": "2026-08-16T00:32:08.246Z",
   "createdAt": "2026-08-14T16:45:36.574Z",
   "id": "ZEfaQf3Bas7UCktN",
   "name": "JML — Sweeper",
@@ -1361,7 +1361,8 @@
     "timeSavedMode": "fixed",
     "saveManualExecutions": true,
     "callerPolicy": "workflowsFromSameOwner",
-    "errorWorkflow": "hKaL0Ag7p8IX1pKS"
+    "errorWorkflow": "hKaL0Ag7p8IX1pKS",
+    "timezone": "Asia/Manila"
   },
   "staticData": {
     "node:Every Hour": {
@@ -1380,7 +1381,7 @@
   "pinData": {},
   "versionId": "5cda0b14-d503-447f-8c83-dc23b83ccbe1",
   "activeVersionId": "5cda0b14-d503-447f-8c83-dc23b83ccbe1",
-  "versionCounter": 155,
+  "versionCounter": 156,
   "triggerCount": 1,
   "sourceWorkflowId": null,
   "tags": [],

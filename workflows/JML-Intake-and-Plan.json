@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-14T16:40:53.225Z",
+  "updatedAt": "2026-08-16T00:42:27.295Z",
   "createdAt": "2026-08-14T11:12:49.708Z",
   "id": "MAcqxMhY0dMkarIh",
   "name": "JML — Intake & Plan",
@@ -124,8 +124,8 @@
       "type": "n8n-nodes-base.formTrigger",
       "typeVersion": 2.6,
       "position": [
-        0,
-        -112
+        -384,
+        -128
       ],
       "id": "beac9536-fc34-4b66-a40c-c19b0a05ad4e",
       "name": "On form submission",
@@ -138,45 +138,11 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        176,
-        -112
+        -240,
+        -128
       ],
       "id": "063164e4-c5c7-4ddf-b3a7-44e3bac1adee",
       "name": "Normalize Request"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "5c5e35f3-0f37-4cbf-9f5e-7880ca35b89c",
-              "leftValue": "={{ $json.valid }}",
-              "rightValue": "",
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        336,
-        -112
-      ],
-      "id": "e8f15d39-faaf-49c6-af88-dcca5911d772",
-      "name": "Validity Check"
     },
     {
       "parameters": {
@@ -195,16 +161,16 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "employee_ref": "={{ $json.employee_ref }}",
-            "full_name": "={{ $json.full_name }}",
-            "personal_email": "={{ $json.personal_email }}",
-            "work_email": "={{ $json.work_email }}",
-            "role_code": "={{ $json.role_code }}",
-            "department": "={{ $json.department }}",
-            "manager_email": "={{ $json.manager_email }}",
-            "start_date": "={{ $json.start_date }}",
-            "end_date": "={{ $json.end_date }}",
-            "status": "={{ $json.request_type === 'onboard' ? 'pending' : 'offboarding' }}",
+            "employee_ref": "={{ $('Normalize Request').item.json.employee_ref }}",
+            "full_name": "={{ $('Normalize Request').item.json.full_name }}",
+            "personal_email": "={{ $('Normalize Request').item.json.personal_email }}",
+            "work_email": "={{ $('Normalize Request').item.json.work_email }}",
+            "role_code": "={{ $('Normalize Request').item.json.role_code }}",
+            "department": "={{ $('Normalize Request').item.json.department }}",
+            "manager_email": "={{ $('Normalize Request').item.json.manager_email }}",
+            "start_date": "={{ $('Normalize Request').item.json.start_date }}",
+            "end_date": "={{ $('Normalize Request').item.json.end_date }}",
+            "status": "={{ $('Normalize Request').item.json.request_type === 'onboard' ? 'pending' : 'offboarding' }}",
             "updated_at": "={{ $now.toISO() }}"
           },
           "matchingColumns": [
@@ -359,8 +325,8 @@
       "type": "n8n-nodes-base.stopAndError",
       "typeVersion": 1,
       "position": [
-        496,
-        -32
+        64,
+        -48
       ],
       "id": "f9e8be2b-36b1-4b21-bd3a-ac756c8c815b",
       "name": "Reject Invalid Reques"
@@ -2378,6 +2344,128 @@
       ],
       "id": "8723b313-8b7e-40c3-b8e8-8aec1fa27783",
       "name": "Execute Plan"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5c5e35f3-0f37-4cbf-9f5e-7880ca35b89c",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -96,
+        -128
+      ],
+      "id": "e8f15d39-faaf-49c6-af88-dcca5911d772",
+      "name": "Validity Check"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "02a3bc1d-20f1-4a7c-b8dd-263e45df9ed4",
+              "leftValue": "={{ $('Normalize Request').item.json.request_type === 'offboard' && !$json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        240,
+        -208
+      ],
+      "id": "2d0730a9-2b2f-404f-8ca1-1e4998c2f677",
+      "name": "Employee Known?"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "employees",
+          "mode": "list",
+          "cachedResultName": "employees"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "employee_ref",
+              "value": "={{ $('Normalize Request').item.json.employee_ref }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        64,
+        -208
+      ],
+      "id": "39f15430-a87c-4b2d-819b-4630631c1587",
+      "name": "Find Employee",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "dJOXoEvmjfshJ1MX",
+          "name": "JML Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ 'Cannot offboard ' + $('Normalize Request').item.json.employee_ref + ': no such employee. Onboard them first, or check the reference.' }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        384,
+        -320
+      ],
+      "id": "31511d85-dd1c-4eb0-9f97-993c5115a322",
+      "name": "Unknown Employee"
     }
   ],
   "connections": {
@@ -2397,24 +2485,6 @@
         [
           {
             "node": "Validity Check",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Validity Check": {
-      "main": [
-        [
-          {
-            "node": "Upsert Employee",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Reject Invalid Reques",
             "type": "main",
             "index": 0
           }
@@ -2675,6 +2745,53 @@
           }
         ]
       ]
+    },
+    "Validity Check": {
+      "main": [
+        [
+          {
+            "node": "Find Employee",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject Invalid Reques",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Employee Known?": {
+      "main": [
+        [
+          {
+            "node": "Unknown Employee",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Upsert Employee",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Employee": {
+      "main": [
+        [
+          {
+            "node": "Employee Known?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -2685,7 +2802,8 @@
     "saveManualExecutions": true,
     "callerPolicy": "workflowsFromSameOwner",
     "executionTimeout": 60,
-    "errorWorkflow": "hKaL0Ag7p8IX1pKS"
+    "errorWorkflow": "hKaL0Ag7p8IX1pKS",
+    "timezone": "Asia/Manila"
   },
   "staticData": null,
   "meta": {
@@ -2693,9 +2811,9 @@
   },
   "nodeGroups": [],
   "pinData": {},
-  "versionId": "385a2e54-7a5e-453f-8a27-7ab5a19ec558",
-  "activeVersionId": "385a2e54-7a5e-453f-8a27-7ab5a19ec558",
-  "versionCounter": 423,
+  "versionId": "537f5a82-f8de-4b20-94f8-cd39485caf0f",
+  "activeVersionId": "537f5a82-f8de-4b20-94f8-cd39485caf0f",
+  "versionCounter": 463,
   "triggerCount": 1,
   "sourceWorkflowId": null,
   "tags": [],
@@ -2720,7 +2838,7 @@
     }
   ],
   "versionMetadata": {
-    "name": "Version 385a2e54",
+    "name": "Version 537f5a82",
     "description": ""
   }
 }
