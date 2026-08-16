@@ -1,0 +1,40 @@
+flowchart TD
+    HR([HR requester]) -->|web form| INTAKE
+
+    INTAKE["<b>WF1 · Intake &amp; Plan</b><br/>validate · dedup · resolve policy<br/>write run + ordered step ledger"]
+    INTAKE ==>|routine| EXEC
+    INTAKE -->|privileged| GATE
+
+    GATE["<b>Approval gate</b><br/>email + Wait node<br/>single-use · 24h expiry"]
+    GATE -.->|link| MGR([Manager])
+    MGR --> CB["<b>WF5 · Approval Callback</b><br/>record decision · release wait"]
+    CB ==>|approved| EXEC
+    CB -->|rejected| DONE(["nothing provisioned"])
+
+    EXEC["<b>WF2 · Execute Plan</b><br/>ordered loop · one step at a time"]
+    EXEC ==> STEP["<b>WF3 · Execute Step</b><br/>idempotent call · read back · verify"]
+    STEP -->|ok · next step| EXEC
+    STEP -->|failed| RB["<b>WF4 · Rollback</b><br/>compensate in reverse order"]
+
+    STEP ==>|REST + Idempotency-Key| IDP[("Mock IdP<br/>:8100")]
+    RB --> IDP
+
+    SWEEP["<b>WF6 · Sweeper</b> — hourly<br/>due offboardings · stale approvals · SLA"] --> EXEC
+    REVIEW["<b>WF9 · Access Review</b> — weekly<br/>live entitlements vs policy"] --> IDP
+
+    INTAKE --- DB[("PostgreSQL<br/>role_entitlements · provisioning_runs<br/>provisioning_steps · audit_events")]
+    STEP --- DB
+
+    classDef wf fill:#1d4ed8,stroke:#1e3a8a,color:#fff
+    classDef gate fill:#166534,stroke:#14532d,color:#fff
+    classDef rb fill:#9a3412,stroke:#7c2d12,color:#fff
+    classDef data fill:#334155,stroke:#1e293b,color:#fff
+    classDef sched fill:#6d28d9,stroke:#4c1d95,color:#fff
+
+    class INTAKE,EXEC,STEP,CB wf
+    class GATE gate
+    class RB rb
+    class DB,IDP data
+    class SWEEP,REVIEW sched
+
+    linkStyle default stroke-width:1.5px
