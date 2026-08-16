@@ -114,14 +114,14 @@ construction, approval gate, dispatch. Remaining canvases are in
 | Granted access is re-checked, not assumed | Weekly diff of live entitlements against policy | Observed: access granted outside the system is reported as `excess_access` |
 | A model cannot invent a role or department | Enum-constrained JSON schema on the output parser | Observed: values outside the six roles cannot leave the parser |
 | A model cannot provision anything | Extraction becomes a pre-filled form URL a human submits | Observed: an injected `skip approval` instruction changes nothing |
-| A model must cite its source | Every extracted field carries the exact substring it came from, checked against the message | Implemented; not yet exercised, the model has declined rather than fabricated |
+| A model must cite its source | Every extracted field carries the exact substring it came from, checked against the message | Observed: with the "quote verbatim" rule removed from the prompt, all seven paraphrased fields were rejected |
 
 Two queries in `db/audit_queries.sql` are **controls** and must always return
 zero rows: nothing privileged provisioned without a recorded approval, and
 nothing marked succeeded that the read-back could not confirm.
 
 **On evidence.** "Observed" means the behaviour was exercised repeatedly during
-development. Three rows are marked as implemented but not yet exercised, rather
+development. Two rows are marked as implemented but not yet exercised, rather
 than implied. [`docs/failure-tests.md`](docs/failure-tests.md) holds an eleven-scenario
 runbook with expected behaviour written per scenario, ready to execute and record.
 
@@ -153,8 +153,8 @@ Four controls sit between the model and the human:
 3. **Evidence grounding.** For every field it fills, the model must quote the
    exact substring of the message it came from, and each quote is checked
    against the source text. A value with no traceable span is refused.
-   *(Implemented; not yet exercised, because the model has so far correctly
-   declined to invent rather than fabricating.)*
+   Verified by fault injection: with the "quote verbatim" instruction removed
+   from the prompt, the model paraphrased and all seven fields were rejected.
 4. **Human submission.** Even a perfect extraction is a draft until someone
    presses Submit on the ordinary form.
 

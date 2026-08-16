@@ -132,6 +132,7 @@ the page.
 | "What breaks first at scale?" | Single n8n process. Queue mode with Redis and workers is the first change, then Postgres for n8n's own state instead of SQLite. |
 | "What would you do differently?" | Add a second target system early. One target lets you fake the plan/execute separation without proving it. |
 | "What was the hardest bug?" | A sweeper that threw on a missing account, which aborted the entire batch so every other due offboarding that hour silently did not happen. The fix was to emit a zero-step plan and audit the record instead of throwing. It taught me that batch jobs must isolate bad records. |
+| "How do you test an LLM guard?" | Fault injection, the same way you test a rollback. I removed the "quote the source verbatim" rule from the prompt so the model paraphrased its evidence, and the grounding check rejected all seven extracted fields. Testing that a guard exists is not the same as testing that it fires. |
 
 ---
 
@@ -140,6 +141,6 @@ the page.
 | If you do this | These sentences change |
 |---|---|
 | Run F1 to F11 and record results | "Validated by an 11-scenario failure suite" becomes usable. Two README rows move from "not yet exercised" to "Observed". |
-| Force the model to fabricate once | The evidence-grounding row moves from "not yet exercised" to "Observed". Temporarily delete the "copy values from the message" rule from the WF8 prompt, submit an email with no date, and confirm the check fires. |
+| Record actual Gemini token usage from aistudio.google.com | The README can report a measured cost per request rather than omitting it. |
 | Add a second target system | The plan/execute separation stops being an assertion. |
 | Put it behind a tunnel with SSO | The two largest Limitations entries disappear. |
