@@ -1,5 +1,12 @@
 # Failure test suite
 
+> **Status: specified, not yet executed as a formal suite.** Six of these
+> scenarios were exercised repeatedly during development and behaved as
+> described below. The Actual and Pass columns are empty because the suite has
+> not been run end to end with evidence captured. Do not cite this document as
+> completed testing until those columns are filled.
+
+
 Ten deliberate failure scenarios. Each one exists because a specific reliability
 claim in the README needs evidence behind it.
 

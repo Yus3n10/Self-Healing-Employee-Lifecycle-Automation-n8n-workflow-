@@ -19,9 +19,10 @@ reproducible test suite rather than claimed.
 | Retries cannot double-apply | Deterministic per-step `Idempotency-Key` sent to the IdP | Replayed calls return `x-idempotent-replay: true` and change nothing |
 | A 2xx response is not trusted | Every step reads the target system back and asserts the intended effect | A write that reports success but does nothing is marked `failed` |
 | Partial failure leaves no orphan state | Reverse-order compensating saga over the step ledger | A mid-plan failure deletes the account it created |
-| Un-cleanable failure is never silent | `rolled_back` and `failed` are distinct terminal states | An un-compensatable run emails a human with a SQL query |
+| Un-cleanable failure is never silent | `rolled_back` and `failed` are distinct terminal states, with an alert on the second | Specified and implemented; not yet exercised (see `docs/failure-tests.md` F11) |
 | Privileged access requires a human | `is_privileged` on the policy row plus a Wait-node gate | Nothing is provisioned until the approval link is clicked |
-| Approval is single-use and time-bounded | Token nulled on use, 24-hour expiry, four validation conditions | A second click returns 410 |
+| Approval is single-use | Token nulled on first use, four validation conditions on the callback | A second click returns 410 |
+| Approval is time-bounded | 24-hour expiry checked on the callback and on Wait timeout | Specified and implemented; not yet exercised (F7) |
 | Scheduled jobs cannot repeat side effects | `NOT EXISTS` guard plus `ON CONFLICT DO NOTHING` | Four sweeper runs produce exactly one offboarding |
 | One bad record cannot abort a batch | Missing accounts emit a zero-step plan instead of throwing | A due employee with no IdP account is audited and skipped |
 | Granted access is re-checked, not assumed | Weekly diff of live entitlements against policy | Access granted outside the system is reported as `excess_access` |
@@ -29,6 +30,12 @@ reproducible test suite rather than claimed.
 Two queries in `db/audit_queries.sql` are **controls** and must always return
 zero rows: nothing privileged provisioned without a recorded approval, and
 nothing marked succeeded that the read-back could not confirm.
+
+**On evidence.** Six of the behaviours above were exercised repeatedly during
+development and are described from what was observed. Three were specified from
+the design and have not yet been run as formal scenarios; they are marked as
+such rather than implied. `docs/failure-tests.md` holds the full runbook with
+expected behaviour written out per scenario, ready to execute and record.
 
 ## Limitations
 
