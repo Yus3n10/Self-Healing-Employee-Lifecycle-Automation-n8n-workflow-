@@ -105,10 +105,10 @@ construction, approval gate, dispatch. Remaining canvases are in
 | Retries cannot double-apply | Deterministic per-step `Idempotency-Key` sent to the IdP | Observed: replays return `x-idempotent-replay: true` and change nothing |
 | A 2xx response is not trusted | Every step reads the target system back and asserts the intended effect | Observed: a write reporting success that changed nothing is marked `failed` |
 | Partial failure leaves no orphan state | Reverse-order compensating saga over the step ledger | Observed: a mid-plan failure deletes the account it created |
-| Un-cleanable failure is never silent | `rolled_back` and `failed` are distinct terminal states, with an alert on the second | Specified and implemented; not yet exercised (F11) |
+| Un-cleanable failure is never silent | `rolled_back` and `failed` are distinct terminal states, with an alert on the second | Observed: killing the IdP mid-rollback ends the run `failed`, leaves steps `compensation_failed`, and emails a human a runnable query |
 | Privileged access requires a human | `is_privileged` on the policy row plus a Wait-node gate | Observed: nothing provisioned until the link is clicked |
 | Approval is single-use | Token nulled on first use; four validation conditions on the callback | Observed: second click returns 410 |
-| Approval is time-bounded | 24-hour expiry checked on the callback and on Wait timeout | Specified and implemented; not yet exercised (F7) |
+| Approval is time-bounded | 24-hour expiry checked on the callback and on Wait timeout | Observed: an expired link returns 410, provisions nothing, and the run closes `expired` when the wait elapses |
 | Scheduled jobs cannot repeat side effects | `NOT EXISTS` guard plus `ON CONFLICT DO NOTHING` | Observed: four sweeper runs produce exactly one offboarding |
 | One bad record cannot abort a batch | Missing accounts emit a zero-step plan instead of throwing | Observed: a due employee with no account is audited and skipped |
 | Granted access is re-checked, not assumed | Weekly diff of live entitlements against policy | Observed: access granted outside the system is reported as `excess_access` |
@@ -120,10 +120,14 @@ Two queries in `db/audit_queries.sql` are **controls** and must always return
 zero rows: nothing privileged provisioned without a recorded approval, and
 nothing marked succeeded that the read-back could not confirm.
 
-**On evidence.** "Observed" means the behaviour was exercised repeatedly during
-development. Two rows are marked as implemented but not yet exercised, rather
-than implied. [`docs/failure-tests.md`](docs/failure-tests.md) holds an eleven-scenario
-runbook with expected behaviour written per scenario, ready to execute and record.
+**On evidence.** Every row above says "Observed", meaning the behaviour was
+exercised against the running system rather than inferred from the code. Several
+were verified by deliberate fault injection: an identity provider that fails a
+chosen action, one killed mid-rollback, and a prompt stripped of its
+quote-the-source rule.
+[`docs/failure-tests.md`](docs/failure-tests.md) holds the eleven-scenario runbook
+with expected behaviour written per scenario. Not every scenario has been run
+formally with evidence captured; that document records which.
 
 ---
 

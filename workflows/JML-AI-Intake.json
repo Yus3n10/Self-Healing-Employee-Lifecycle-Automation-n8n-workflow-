@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-16T03:00:19.897Z",
+  "updatedAt": "2026-08-16T03:36:07.314Z",
   "createdAt": "2026-08-16T02:34:35.033Z",
   "id": "MEPd7iFp9A6lXuwD",
   "name": "JML — AI Intake",
@@ -75,8 +75,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1.1,
       "position": [
-        112,
-        208
+        224,
+        192
       ],
       "id": "78648cf3-603b-45c0-9117-a42a97bb6b23",
       "name": "Google Gemini Chat Model",
@@ -534,9 +534,9 @@
   },
   "nodeGroups": [],
   "pinData": {},
-  "versionId": "3ffd6292-6bcd-46cd-8899-220550a96b4d",
-  "activeVersionId": "3ffd6292-6bcd-46cd-8899-220550a96b4d",
-  "versionCounter": 71,
+  "versionId": "de245909-6c79-49b5-a1dd-40f9cf6532da",
+  "activeVersionId": "de245909-6c79-49b5-a1dd-40f9cf6532da",
+  "versionCounter": 79,
   "triggerCount": 1,
   "sourceWorkflowId": null,
   "tags": [],
@@ -561,7 +561,7 @@
     }
   ],
   "versionMetadata": {
-    "name": "Version 3ffd6292",
+    "name": "Version de245909",
     "description": ""
   }
 }

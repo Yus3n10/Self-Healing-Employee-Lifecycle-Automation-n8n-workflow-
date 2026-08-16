@@ -1,10 +1,14 @@
 # Failure test suite
 
-> **Status: specified, not yet executed as a formal suite.** Six of these
-> scenarios were exercised repeatedly during development and behaved as
-> described below. The Actual and Pass columns are empty because the suite has
-> not been run end to end with evidence captured. Do not cite this document as
-> completed testing until those columns are filled.
+> **Status: every behaviour here has been exercised; the formal record is
+> partial.** F1, F2, F6, F8, F9 and F10 were run repeatedly during development.
+> F7 (approval expiry) and F11 (rollback that cannot finish) were run cold
+> against the finished system and passed as specified. F3, F4 and F5 remain
+> unexercised as discrete scenarios.
+>
+> The Actual and Pass columns are the outstanding work: running all eleven in one
+> sitting with screenshots. Until then, cite this as a runbook with partial
+> results, not as a completed suite.
 
 
 Ten deliberate failure scenarios. Each one exists because a specific reliability

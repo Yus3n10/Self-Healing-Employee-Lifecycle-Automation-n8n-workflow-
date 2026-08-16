@@ -94,7 +94,7 @@ the page.
 
 | Do not write | Because |
 |---|---|
-| "Validated by an 11-scenario failure suite" | The suite is specified, not executed |
+| "Validated by an 11-scenario failure suite" | Eight of eleven have been exercised; the formal record with evidence is incomplete. Say "verified by fault injection across eight failure scenarios" instead. |
 | "AI-powered provisioning" | The LLM drafts a request; it provisions nothing |
 | "Reduced onboarding time by X%" | Never ran in a company; there is no baseline |
 | "Production-grade" / "production-ready" | It runs single-process against a simulator |
