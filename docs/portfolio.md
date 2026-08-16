@@ -81,19 +81,21 @@ the page.
 > including a control query proving no privileged access was granted without a
 > recorded approval.
 
-**4. Judgement about AI**
+**4. Constrained AI in a security-relevant workflow**
 
-> Deliberately excluded LLMs from every state-changing decision in a
-> security-relevant workflow, documenting which decisions belong to a policy
-> table rather than a model, and scoping the one planned AI feature to produce a
-> human-confirmed draft that cannot provision anything directly.
+> Added a single LLM feature that parses free-text HR emails into structured
+> requests using an enum-constrained JSON schema, cross-field validation, and
+> evidence grounding that requires the model to quote the source substring for
+> every field it fills; its output becomes a pre-filled form a human submits
+> rather than a database write, so an injected instruction to escalate
+> privileges changes nothing about what gets provisioned.
 
 ### Wording to avoid
 
 | Do not write | Because |
 |---|---|
 | "Validated by an 11-scenario failure suite" | The suite is specified, not executed |
-| "AI-powered provisioning" | There is no LLM in the system |
+| "AI-powered provisioning" | The LLM drafts a request; it provisions nothing |
 | "Reduced onboarding time by X%" | Never ran in a company; there is no baseline |
 | "Production-grade" / "production-ready" | It runs single-process against a simulator |
 | "Integrated with Okta / Google Workspace" | The IdP is a simulator you wrote |
@@ -138,6 +140,6 @@ the page.
 | If you do this | These sentences change |
 |---|---|
 | Run F1 to F11 and record results | "Validated by an 11-scenario failure suite" becomes usable. Two README rows move from "not yet exercised" to "Observed". |
-| Build Stage 3 (AI intake) | Bullet 4 gains "built and evidence-grounded, with enum-constrained structured output and a prompt-injection test". |
+| Force the model to fabricate once | The evidence-grounding row moves from "not yet exercised" to "Observed". Temporarily delete the "copy values from the message" rule from the WF8 prompt, submit an email with no date, and confirm the check fires. |
 | Add a second target system | The plan/execute separation stops being an assertion. |
 | Put it behind a tunnel with SSO | The two largest Limitations entries disappear. |

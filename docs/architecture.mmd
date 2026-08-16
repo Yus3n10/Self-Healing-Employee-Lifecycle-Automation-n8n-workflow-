@@ -1,4 +1,6 @@
 flowchart TD
+    MAIL([Free-text HR email]) --> AI["<b>WF8 · AI Intake</b><br/>enum-constrained extraction<br/>evidence-grounded · no authority"]
+    AI -.->|pre-filled form link| HR
     HR([HR requester]) -->|web form| INTAKE
 
     INTAKE["<b>WF1 · Intake &amp; Plan</b><br/>validate · dedup · resolve policy<br/>write run + ordered step ledger"]
@@ -30,7 +32,9 @@ flowchart TD
     classDef rb fill:#9a3412,stroke:#7c2d12,color:#fff
     classDef data fill:#334155,stroke:#1e293b,color:#fff
     classDef sched fill:#6d28d9,stroke:#4c1d95,color:#fff
+    classDef ai fill:#0f766e,stroke:#134e4a,color:#fff
 
+    class AI ai
     class INTAKE,EXEC,STEP,CB wf
     class GATE gate
     class RB rb
