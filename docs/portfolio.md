@@ -38,16 +38,25 @@ control query screenshot, and the closing scroll. About 20 minutes of recording.
 | 2 | WF1 canvas, showing the branching | done |
 | 3 | WF3 canvas with the red error-output branch visible | done |
 | 4 | WF4 rollback canvas | done |
-| 5 | Approval email with `[PRIVILEGED]` rows | **needed** |
-| 6 | Executions list showing a run in *Waiting* state | **needed** |
-| 7 | F1 execution graph: green, green, green, red, then rollback | **needed** |
-| 8 | `provisioning_steps` after F1: mixed `compensated` / `failed` / `pending` | **needed** |
-| 9 | Control query returning zero rows | **needed** |
-| 10 | Access review drift email naming `prod-admin` | **needed** |
+| 5 | Approval email with `[PRIVILEGED]` rows | done, `09-approval-email.png` |
+| 6 | Executions list showing a run in *Waiting* state | done, `10-executions-waiting.png` |
+| 7 | Execution graph: three green, one red, then rollback | done, `11-rollback-execution.png` |
+| 8 | `provisioning_steps` afterwards: `compensated` / `failed` / `pending` | done, `12-step-ledger-rollback.png` |
+| 9 | Control query returning zero rows | done, `13-control-query-zero-rows.png` |
+| 10 | Access review drift email naming `prod-admin` | done, `14-access-review-drift.png` |
+| 11 | Run summary across mixed outcomes | done, `15-run-summary.png` |
+| 12 | The request form itself | done, `16-request-form.png` |
 
-Shots 7, 8 and 9 are the three that carry the most weight and none of them need
-a new test run: 7 and 8 can be cropped from the F1 recording, and 9 is one query
-against data you already have.
+All seventeen captured. Four are embedded in the README (architecture, rollback
+execution, step ledger, control query, approval email); the rest support the demo
+video and interviews.
+
+**One caption worth getting right.** In `12-step-ledger-rollback.png` the failed
+step reads `verification failed: license HELPDESK_SEAT not in []`. That is the
+read-back verification firing, not an HTTP error. The IdP returned success and
+the follow-up GET proved nothing had changed. Say it that way: "the API said it
+worked, we checked, it hadn't, so the run rolled back" is a stronger and more
+accurate claim than "the API errored".
 
 ---
 

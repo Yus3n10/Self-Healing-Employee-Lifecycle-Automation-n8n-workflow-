@@ -5,6 +5,8 @@ A request becomes a policy-derived plan, privileged grants pause for a human,
 every step executes idempotently and is verified by reading the target system
 back, and any partial failure is compensated in reverse order.
 
+<img src="docs/assets/lifecycle-flow.svg" alt="Animated diagram of three request paths: a routine onboarding that completes unattended, a privileged one that halts at an approval gate, and a failing run whose completed steps are undone in reverse order" width="100%">
+
 > **This is a working demonstration, not a deployment.** The identity provider in
 > `mock-idp/` is a simulator written for this project. All employee data is
 > synthetic. It has never run in a company. What is real is the behaviour under
@@ -89,6 +91,22 @@ contexts that don't support mermaid is at
 | WF8 | AI Intake | Web form | Parse a free-text HR email into a human-confirmed draft |
 | WF9 | Access Review | Weekly | Report entitlement drift; does not remediate |
 
+## Tech stack
+
+| Layer | What | Why it was chosen |
+|---|---|---|
+| Orchestration | **n8n 2.34.5**, self-hosted via npm | Durable execution history, per-node retry policy, and a Wait node that survives restarts. Workflows export to JSON so they live in git. |
+| Logic | **JavaScript** in n8n Code nodes | Plan construction, verification assertions, and the compensation map had to be exact, so they are code rather than clicked-together nodes. |
+| Database | **PostgreSQL 17** on Neon (serverless free tier) | UNIQUE constraints enforce idempotency at the storage layer, `jsonb` holds request and response payloads, and a view aggregates run outcomes. |
+| Target system | **FastAPI · Uvicorn · Pydantic** on Python 3.11 | A simulated identity provider written for this project, with API-key auth, `Idempotency-Key` replay, `429` responses, and an injectable fault endpoint. |
+| AI | **Google Gemini Flash** via n8n's Basic LLM Chain, Structured Output Parser and Auto-fixing Output Parser | Cheap, fast, and schema-constrainable. Used once, for parsing free-text email into a human-confirmed draft. |
+| Notifications | **SMTP** (Gmail app password) | Approval links, SLA breaches, drift reports, and failure alerts. |
+| Tooling | **PowerShell 5.1**, **Git**, **Mermaid** | Startup and reset scripts, IdP helper cmdlets, version-controlled workflow exports, and diagrams that stay editable. |
+
+Everything runs on a free tier or locally. No paid service is required to reproduce it.
+
+---
+
 <img src="docs/screenshots/01-intake-and-plan.png" alt="Intake and Plan workflow canvas" width="100%">
 
 *WF1: validation, duplicate detection, onboard/offboard routing, plan
@@ -128,6 +146,38 @@ quote-the-source rule.
 [`docs/failure-tests.md`](docs/failure-tests.md) holds the eleven-scenario runbook
 with expected behaviour written per scenario. Not every scenario has been run
 formally with evidence captured; that document records which.
+
+### What it looks like when a step fails
+
+<img src="docs/screenshots/11-rollback-execution.png" alt="Execution graph showing three successful steps, one failure, and rollback" width="100%">
+
+*A licence assignment fails partway through onboarding. The loop breaks and
+`Trigger Rollback` fires instead of continuing.*
+
+<img src="docs/screenshots/12-step-ledger-rollback.png" alt="Step ledger showing three compensated steps, one failed, one pending" width="100%">
+
+*The ledger afterwards. Steps 10, 20 and 21 succeeded and were then
+`compensated`; step 50 is `failed`; step 51 never ran. Note the error:
+`verification failed: license HELPDESK_SEAT not in []`. The identity provider
+returned success and the read-back proved nothing had changed. **The rollback was
+triggered by the verification, not by an HTTP error.***
+
+### The control that proves the approval gate
+
+<img src="docs/screenshots/13-control-query-zero-rows.png" alt="Control query returning no rows" width="100%">
+
+*Across every run in the database, no privileged entitlement was ever granted
+without a recorded approval. `No result` means zero rows. This is not a vacuous
+pass: privileged entitlements **were** granted during these runs, via the
+approval gate, and the query still returns nothing.*
+
+### The human gate, as the approver sees it
+
+<img src="docs/screenshots/09-approval-email.png" alt="Approval email listing the plan with privileged steps marked" width="70%">
+
+*The full plan, with `[PRIVILEGED]` marking the two steps that triggered the
+gate, a stated reason, and single-use approve and reject links that expire in 24
+hours.*
 
 ---
 

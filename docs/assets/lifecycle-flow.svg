@@ -1,0 +1,135 @@
+<svg viewBox="0 0 1200 470" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Animated diagram of the three paths a provisioning request can take through the JML Orchestrator: a routine onboarding that completes unattended, a privileged onboarding that pauses for human approval, and a failing run that is compensated in reverse order.">
+  <desc>Three horizontal tracks. A dot travels left to right through a chain of nodes, disappearing into each node and emerging from it. Track one runs straight through. Track two halts at an approval gate until a manager acts. Track three fails at a licence assignment, then a second dot travels right to left, undoing the steps that had already succeeded.</desc>
+
+  <defs>
+    <pattern id="gridJ" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M 32 0 L 0 0 0 32" fill="none" stroke="#ffffff" stroke-opacity="0.055" stroke-width="1"/>
+    </pattern>
+    <radialGradient id="glowJ" cx="20%" cy="10%" r="60%">
+      <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.11"/>
+      <stop offset="55%" stop-color="#1d4ed8" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#0b0e14" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="470" fill="#0b0e14"/>
+  <rect width="1200" height="470" fill="url(#gridJ)"/>
+  <rect width="1200" height="470" fill="url(#glowJ)"/>
+
+  <text x="40" y="42" font-family="Consolas, 'Courier New', monospace" font-size="13" letter-spacing="2.5" fill="#a78bfa">JML ORCHESTRATOR &#183; WHAT HAPPENS TO A REQUEST</text>
+  <line x1="560" y1="37" x2="1160" y2="37" stroke="#232b38" stroke-width="1.5"/>
+  <text x="40" y="68" font-family="Inter, 'Segoe UI', Arial, Helvetica, system-ui, sans-serif" font-size="13" fill="#71717a">&#9679; the request &#183; each node is a real workflow step &#183; <tspan fill="#7ee787">green = provisioned</tspan> &#183; <tspan fill="#fdcb6e">amber = waiting on a human</tspan> &#183; <tspan fill="#f97583">red = undone</tspan></text>
+
+  <!-- ══════════ TRACK 1 · routine ══════════ -->
+  <text x="40" y="106" font-family="Consolas, 'Courier New', monospace" font-size="11" letter-spacing="1.5" fill="#8b5cf6">01 &#183; ROUTINE ONBOARD &#8212; completes with no human</text>
+
+  <line x1="109" y1="146" x2="1034" y2="146" stroke="#232b38" stroke-width="1.4"/>
+  <path d="M 109,146 L 1034,146" fill="none" stroke="#8b5cf6" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="925" stroke-dashoffset="925" opacity="0">
+    <animate attributeName="stroke-dashoffset" values="925;925;0;0;925;925" keyTimes="0;0.06;0.56;0.86;0.9;1" dur="6s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.07;0.86;0.9;1" dur="6s" repeatCount="indefinite"/>
+  </path>
+  <circle r="4.2" fill="#a78bfa" opacity="0">
+    <animateMotion path="M 109,146 L 1034,146" keyPoints="0;0;1;1" keyTimes="0;0.06;0.56;1" calcMode="linear" dur="6s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.05;0.07;0.55;0.57;1" dur="6s" repeatCount="indefinite"/>
+  </circle>
+
+  <g font-family="Consolas, 'Courier New', monospace" text-anchor="middle">
+    <rect x="44"  y="124" width="130" height="44" rx="9" fill="#161b22" stroke="#ffffff" stroke-opacity="0.09"/>
+    <text x="109"  y="142" font-size="10.5" fill="#c9d1d9">request</text><text x="109"  y="157" font-size="9" fill="#71717a">web form</text>
+    <rect x="229" y="124" width="130" height="44" rx="9" fill="#161b22" stroke="#ffffff" stroke-opacity="0.09"/>
+    <text x="294" y="142" font-size="10.5" fill="#c9d1d9">validate</text><text x="294" y="157" font-size="9" fill="#71717a">+ dedup</text>
+    <rect x="414" y="124" width="130" height="44" rx="9" fill="#161b22" stroke="#ffffff" stroke-opacity="0.09"/>
+    <text x="479" y="142" font-size="10.5" fill="#c9d1d9">plan</text><text x="479" y="157" font-size="9" fill="#71717a">from policy</text>
+    <rect x="599" y="124" width="130" height="44" rx="9" fill="#161b22" stroke="#ffffff" stroke-opacity="0.09"/>
+    <text x="664" y="142" font-size="10.5" fill="#c9d1d9">execute step</text><text x="664" y="157" font-size="9" fill="#71717a">idempotent</text>
+    <rect x="784" y="124" width="130" height="44" rx="9" fill="#161b22" stroke="#ffffff" stroke-opacity="0.09"/>
+    <text x="849" y="142" font-size="10.5" fill="#c9d1d9">verify</text><text x="849" y="157" font-size="9" fill="#71717a">read back</text>
+    <rect x="969" y="124" width="130" height="44" rx="9" fill="#1c2330" stroke="#7ee787" stroke-opacity="0.75"/>
+    <text x="1034" y="142" font-size="10.5" fill="#7ee787">identity provider</text><text x="1034" y="157" font-size="9" fill="#71717a">provisioned</text>
+  </g>
+  <g transform="translate(1084,138)" stroke="#7ee787" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0">
+    <path d="M 0,5 L 4,9 L 11,1"/>
+    <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.57;0.6;0.86;0.9;1" dur="6s" repeatCount="indefinite"/>
+  </g>
+  <text x="44" y="190" font-family="Inter, 'Segoe UI', Arial, Helvetica, system-ui, sans-serif" font-size="10" fill="#71717a">five steps derived from a policy table &#183; every write is read back before it counts as done</text>
+
+  <!-- ══════════ TRACK 2 · privileged ══════════ -->
+  <text x="40" y="228" font-family="Consolas, 'Courier New', monospace" font-size="11" letter-spacing="1.5" fill="#8b5cf6">02 &#183; PRIVILEGED ONBOARD &#8212; halts until a person decides</text>
+
+  <line x1="109" y1="268" x2="1034" y2="268" stroke="#232b38" stroke-width="1.4"/>
+  <path d="M 109,268 L 1034,268" fill="none" stroke="#8b5cf6" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="925" stroke-dashoffset="925" opacity="0">
+    <animate attributeName="stroke-dashoffset" values="925;925;555;555;0;0;925;925" keyTimes="0;0.06;0.28;0.5;0.74;0.88;0.92;1" dur="6s" begin="0.35s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.07;0.88;0.92;1" dur="6s" begin="0.35s" repeatCount="indefinite"/>
+  </path>
+  <circle r="4.2" fill="#a78bfa" opacity="0">
+    <animateMotion path="M 109,268 L 1034,268" keyPoints="0;0;0.4;0.4;1;1" keyTimes="0;0.06;0.28;0.5;0.74;1" calcMode="linear" dur="6s" begin="0.35s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.05;0.07;0.73;0.75;1" dur="6s" begin="0.35s" repeatCount="indefinite"/>
+  </circle>
+
+  <g font-family="Consolas, 'Courier New', monospace" text-anchor="middle">
+    <rect x="44"  y="246" width="130" height="44" rx="9" fill="#161b22" stroke="#ffffff" stroke-opacity="0.09"/>
+    <text x="109"  y="264" font-size="10.5" fill="#c9d1d9">request</text><text x="109"  y="279" font-size="9" fill="#71717a">web form</text>
+    <rect x="229" y="246" width="130" height="44" rx="9" fill="#161b22" stroke="#ffffff" stroke-opacity="0.09"/>
+    <text x="294" y="264" font-size="10.5" fill="#c9d1d9">plan</text><text x="294" y="279" font-size="9" fill="#71717a">2 privileged</text>
+    <rect x="414" y="246" width="130" height="44" rx="9" fill="#1c2330" stroke="#fdcb6e" stroke-opacity="0.8"/>
+    <text x="479" y="264" font-size="10.5" fill="#fdcb6e">approval gate</text><text x="479" y="279" font-size="9" fill="#71717a">single-use &#183; 24h</text>
+    <rect x="599" y="246" width="130" height="44" rx="9" fill="#161b22" stroke="#ffffff" stroke-opacity="0.09"/>
+    <text x="664" y="264" font-size="10.5" fill="#c9d1d9">manager</text><text x="664" y="279" font-size="9" fill="#71717a">approves</text>
+    <rect x="784" y="246" width="130" height="44" rx="9" fill="#161b22" stroke="#ffffff" stroke-opacity="0.09"/>
+    <text x="849" y="264" font-size="10.5" fill="#c9d1d9">execute</text><text x="849" y="279" font-size="9" fill="#71717a">+ verify</text>
+    <rect x="969" y="246" width="130" height="44" rx="9" fill="#1c2330" stroke="#7ee787" stroke-opacity="0.75"/>
+    <text x="1034" y="264" font-size="10.5" fill="#7ee787">identity provider</text><text x="1034" y="279" font-size="9" fill="#71717a">provisioned</text>
+  </g>
+  <rect x="414" y="246" width="130" height="44" rx="9" fill="none" stroke="#fdcb6e" stroke-width="2" opacity="0">
+    <animate attributeName="opacity" values="0;0;0.9;0.15;0.9;0.15;0;0" keyTimes="0;0.28;0.32;0.38;0.44;0.48;0.5;1" dur="6s" begin="0.35s" repeatCount="indefinite"/>
+  </rect>
+  <g transform="translate(714,260)" stroke="#7ee787" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0">
+    <path d="M 0,5 L 4,9 L 11,1"/>
+    <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.5;0.53;0.88;0.92;1" dur="6s" begin="0.35s" repeatCount="indefinite"/>
+  </g>
+  <text x="44" y="312" font-family="Inter, 'Segoe UI', Arial, Helvetica, system-ui, sans-serif" font-size="10" fill="#71717a">nothing is provisioned while it waits &#183; the link works once and expires after 24 hours</text>
+
+  <!-- ══════════ TRACK 3 · rollback ══════════ -->
+  <text x="40" y="350" font-family="Consolas, 'Courier New', monospace" font-size="11" letter-spacing="1.5" fill="#8b5cf6">03 &#183; A STEP FAILS &#8212; everything already done is undone, in reverse</text>
+
+  <line x1="109" y1="390" x2="1034" y2="390" stroke="#232b38" stroke-width="1.4"/>
+  <path d="M 109,390 L 1034,390" fill="none" stroke="#8b5cf6" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="925" stroke-dashoffset="925" opacity="0">
+    <animate attributeName="stroke-dashoffset" values="925;925;185;185;925;925" keyTimes="0;0.06;0.36;0.72;0.76;1" dur="6s" begin="0.7s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;1;1;0.25;0.25;0;0" keyTimes="0;0.07;0.44;0.46;0.72;0.76;1" dur="6s" begin="0.7s" repeatCount="indefinite"/>
+  </path>
+  <circle r="4.2" fill="#a78bfa" opacity="0">
+    <animateMotion path="M 109,390 L 1034,390" keyPoints="0;0;0.8;0.8" keyTimes="0;0.06;0.36;1" calcMode="linear" dur="6s" begin="0.7s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.05;0.07;0.35;0.37;1" dur="6s" begin="0.7s" repeatCount="indefinite"/>
+  </circle>
+  <path d="M 849,390 L 294,390" fill="none" stroke="#f97583" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="555" stroke-dashoffset="555" opacity="0">
+    <animate attributeName="stroke-dashoffset" values="555;555;0;0;555;555" keyTimes="0;0.46;0.72;0.86;0.9;1" dur="6s" begin="0.7s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.46;0.48;0.86;0.9;1" dur="6s" begin="0.7s" repeatCount="indefinite"/>
+  </path>
+  <circle r="4.2" fill="#f97583" opacity="0">
+    <animateMotion path="M 849,390 L 294,390" keyPoints="0;0;1;1" keyTimes="0;0.46;0.72;1" calcMode="linear" dur="6s" begin="0.7s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.45;0.48;0.71;0.73;1" dur="6s" begin="0.7s" repeatCount="indefinite"/>
+  </circle>
+
+  <g font-family="Consolas, 'Courier New', monospace" text-anchor="middle">
+    <rect x="44"  y="368" width="130" height="44" rx="9" fill="#161b22" stroke="#ffffff" stroke-opacity="0.09"/>
+    <text x="109"  y="386" font-size="10.5" fill="#c9d1d9">request</text><text x="109"  y="401" font-size="9" fill="#71717a">web form</text>
+    <rect x="229" y="368" width="130" height="44" rx="9" fill="#161b22" stroke="#ffffff" stroke-opacity="0.09"/>
+    <text x="294" y="386" font-size="10.5" fill="#c9d1d9">create_account</text><text x="294" y="401" font-size="9" fill="#71717a">verified</text>
+    <rect x="414" y="368" width="130" height="44" rx="9" fill="#161b22" stroke="#ffffff" stroke-opacity="0.09"/>
+    <text x="479" y="386" font-size="10.5" fill="#c9d1d9">add_group</text><text x="479" y="401" font-size="9" fill="#71717a">all-staff</text>
+    <rect x="599" y="368" width="130" height="44" rx="9" fill="#161b22" stroke="#ffffff" stroke-opacity="0.09"/>
+    <text x="664" y="386" font-size="10.5" fill="#c9d1d9">add_group</text><text x="664" y="401" font-size="9" fill="#71717a">support</text>
+    <rect x="784" y="368" width="130" height="44" rx="9" fill="#1c2330" stroke="#f97583" stroke-opacity="0.75"/>
+    <text x="849" y="386" font-size="10.5" fill="#f97583">assign_license</text><text x="849" y="401" font-size="9" fill="#71717a">verify failed</text>
+    <rect x="969" y="368" width="130" height="44" rx="9" fill="#161b22" stroke="#ffffff" stroke-opacity="0.09" stroke-dasharray="4 3"/>
+    <text x="1034" y="386" font-size="10.5" fill="#71717a">run</text><text x="1034" y="401" font-size="9" fill="#71717a">rolled_back</text>
+  </g>
+  <g transform="translate(920,381)" stroke="#f97583" stroke-width="2" fill="none" stroke-linecap="round" opacity="0">
+    <path d="M 0,0 L 9,9 M 9,0 L 0,9"/>
+    <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.37;0.4;0.86;0.9;1" dur="6s" begin="0.7s" repeatCount="indefinite"/>
+  </g>
+  <rect x="969" y="368" width="130" height="44" rx="9" fill="none" stroke="#7ee787" stroke-width="1.6" opacity="0">
+    <animate attributeName="opacity" values="0;0;0.85;0.85;0;0" keyTimes="0;0.73;0.76;0.86;0.9;1" dur="6s" begin="0.7s" repeatCount="indefinite"/>
+  </rect>
+  <text x="44" y="434" font-family="Inter, 'Segoe UI', Arial, Helvetica, system-ui, sans-serif" font-size="10" fill="#71717a">the identity provider returned success &#183; the read-back proved otherwise &#183; the three completed steps are compensated newest-first</text>
+</svg>
