@@ -249,13 +249,15 @@ Stated plainly, because a reviewer will find them anyway.
 
 ## Operational notes learned by running it
 
-- **Neon's free tier scales compute to zero.** The first connection after an idle
-  period can exceed n8n's startup database ping timeout, and n8n activates
-  workflows during that window. The result is an n8n that serves `/healthz` fine
-  while every webhook and form URL returns 404. Wake the database with any query
-  before starting n8n, then verify with
+- **`/healthz` answering does not mean your workflows are live.** After one
+  restart, n8n logged `Database ping failed: Database connection timed out` twice
+  (its own SQLite store, not the Neon database) and then `Database connection
+  recovered`. It served `/healthz` normally while every form and webhook URL
+  returned 404, because workflow activation had been skipped. A second restart
+  fixed it. The root cause was not established, so treat this as an observed
+  failure mode rather than an explained one. After any start, verify with
   `curl.exe -s -o NUL -w "%{http_code}" http://localhost:5678/form/jml-request`
-  rather than trusting the editor loading.
+  and expect `200`.
 - **n8n executes a node once per incoming item.** Any node after a loop's `done`
   output that should act once needs **Execute Once**, or you get one email per item.
 - **`$('Node').all()` after a loop returns the last iteration only.** Aggregate by

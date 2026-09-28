@@ -47,8 +47,8 @@ Reset-Idp; Set-Chaos off
 TRUNCATE audit_events, provisioning_steps, provisioning_runs, employees RESTART IDENTITY CASCADE;
 ```
 
-Wake Neon with any query before starting n8n, or workflow activation fails
-silently and every webhook returns 404. See the README's operational notes.
+After starting n8n, confirm the workflows registered (the form URL should return
+200, not 404) before running anything. See the README's operational notes.
 
 ---
 
